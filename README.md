@@ -18,7 +18,12 @@ Transformations are small, reusable code chunks that can do anything they like t
 * Convert verbose resources & formats into lightweight over-the-wire formats
     * e.g. get just what you need from a large XML resource as a small JSON document
 
-Simply make an HTTP `GET` request to your pipeline with a single parameter `url`. The URL given can be any resource that the Tache.io server can retrieve over HTTP -- this could be content on the public web, resources inside your network, etc.
+Simply make an HTTP `GET` request to your endpoint's name followed by the URL of the resource you want to transform., e.g. `GET /my.pipe/http://example.com`. The URL given can be any resource that the Tache.io server can retrieve over HTTP -- this could be content on the public web, resources inside your network, etc.
+
+You can also specify the endpoint as an additional header named `Tache-endpoint`, and omit it from the request URL, e.g.
+
+    GET /http://example.com
+    Tache-endpoint: my.pipeline
 
 Tache.io will fetch the request specified by the URL, pass it through each transformation job in turn, and output the result to the client. It'll also store a cache of the result on the server, ready for quick retrieval later.
 

@@ -4,13 +4,28 @@ var http  = require('http'),
     fs    = require('fs'),
     util  = require('util'),
     path  = require('path');
+var config = {};
+var defaults = {
+  port:8000,
+  cache:{
+    ttl:"1h",
+    disk:false,
+    redis:{
+      host:"127.0.0.1",
+      port:6379
+    }
+  }
+};
 
-var setDefaults = function(obj,defaults){
-  for (key in defaults){
-    if (!obj.hasOwnProperty(key))
-      obj[key] = defaults[key];
-    if (typeof obj[key] == 'object')
-      setDefaults(obj[key],defaults[key]);
+var setDefaults = function(to,from){
+  var from = from || defaults;
+  for (key in from){
+    if (!to.hasOwnProperty(key)){
+      to[key] = from[key];
+    }
+    if (typeof to[key] == 'object'){
+      setDefaults(to[key],from[key]);
+    }
   }
 };
 
@@ -28,20 +43,12 @@ exports.init = function(){
   }
   
   console.log('Using config file '+ path.resolve(path.normalize(config_path)) + ':');
-  var config = JSON.parse(fs.readFileSync(config_path, "utf8"));
+  config = JSON.parse(fs.readFileSync(config_path, "utf8"));
+  
+  //TOOD: Nice idea: watch config file for changes and dynamically reload?
   
   //establish defaults:
-  setDefaults(config,{
-    port:8000,
-    cache:{
-      ttl:"1h",
-      disk:false,
-      redis:{
-        host:"127.0.0.1",
-        port:6379
-      }
-    }
-  });
+  setDefaults(config);
   
   console.log("Full config is: " + util.inspect(config)+"\n");
   

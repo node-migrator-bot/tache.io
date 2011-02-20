@@ -3,7 +3,12 @@ var http  = require('http'),
     sys   = require('sys'),
     fs    = require('fs'),
     util  = require('util'),
-    path  = require('path');
+    path  = require('path'),
+    url   = require('url');
+
+var check = require('validator').check,
+    sanitize = require('validator').sanitize;
+
 var config = {};
 var defaults = {
   port:8000,
@@ -28,6 +33,98 @@ var setDefaults = function(to,from){
     }
   }
 };
+
+var onRequest = function(request, response){
+  
+  var fail = function(status,reason,msg){
+    _respond(response,status,reason,msg,'text-plain',function(){
+      console.log("Rejecting request to " + request.uri + ' : ' + msg);
+    });
+  };
+  var reply = function(content_type,body){
+    _respond(response,200,"OK",body,content_type);
+  };
+  //break request URI at the slash between the endpoint name and a URI protocol.
+  //(if there's a URI after the endpoint, the slash between is removed here)
+  var uri_parts = request.headers['tache-endpoint']
+    ?[request.headers['tache-endpoint'], request.url]
+    :request.url.split(/\/(?=\w+:\/\/)/,2);
+  
+  //TODO: this cleaning of urls etc needs a LOT of work
+  uri_parts[0] = uri_parts[0].replace(/\.+/,'.');   //strip any multiple instances of dots, prevent directory traversal
+  uri_parts[1] = uri_parts[1].replace(/^\//,'');    //can end up with a leading slash if endpoint is specified in header
+  /* uri_parts will be one of:
+    [endpoint_name, target_uri]
+    [endpoint_name]
+    [endpoint_name/]
+  */
+  console.log(util.inspect(uri_parts));
+  
+  //TODO: if the endpoint name has a slash at the end, treat it sort of like
+  //a HEAD request to the endpoint and return meta info
+  try {
+    check(uri_parts[0]).regex(/(\w\.)+\w+/);
+  } catch (e) {
+    return fail(501,
+      "Not Supported",
+      "Invalid endpoint name form");
+  }
+  
+  //if no URI specified (could happen with direct requests to root and an endpoint header)
+  //TODO: node-validator only accepts http, https, ftp. Do i need to support more?
+  try {
+    check(uri_parts[1]).isUrl();
+  } catch (e) {
+    return fail(404,
+      "Not Found",
+      "No URL specified");
+  }
+  
+  //TODO: check endpoint exists and load it (without killing server if it doesn't exist!)
+  
+  //got URL, so go fetch it
+  var target = url.parse(uri_parts[1]);
+  var get_opts = {
+    host: target.host,
+    port: target.port || 80,
+    path: (target.pathname || "/") + (target.search || "") + (target.hash || "")
+  };
+  
+  console.log("Received URL: " + util.inspect(target));
+  console.log("Remote fetch data: " + util.inspect(get_opts));
+
+  
+  (target.protocol == 'https:'
+    ?https
+    :http).get(get_opts, function(remoteResponse) {
+      console.log("Got remote response: " + remoteResponse.statusCode);
+      //ugh, nasty hack to provide quick debug echo service
+      remoteResponse.setEncoding(encoding='utf8');
+      var remoteContent = "";
+      
+      remoteResponse.on('data', function (chunk) {
+        remoteContent += chunk;
+      });
+      
+      remoteResponse.on('end', function (chunk) {
+        _respond(response, remoteResponse.statusCode, "", remoteResponse.headers["content-type"],remoteContent);
+      });
+      
+    }).on('error', function(e) {
+      console.log("Got error: " + e.message);
+    });
+  
+  
+}
+
+var _respond = function(response, status, reasonPhrase, content_type, body, after){
+  response.writeHead(status, reasonPhrase || "", {
+    'Content-Length': body.length,
+    'Content-Type': content_type });
+  response.write(body);
+  response.end();
+  if (after) after();
+}
 
 exports.init = function(){
   
@@ -61,13 +158,8 @@ exports.init = function(){
   
   //setup server
   
-  http.createServer(function(req, res) {
-    setTimeout(function() {
-      res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.write('Hello World');
-      res.end();
-    }, 2000);
-  }).listen(
+  http.createServer(onRequest)
+  .listen(
     config.port,
     config.hostname,
     function(){

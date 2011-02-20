@@ -4,32 +4,32 @@ var app = {
      
     var credentials = determineAuth();  //todo: define supported authentication systems
     
-    var pipe_name = credentials.autoPipe || request.getPipeName();
+    var endpoint_name = credentials.autoEndpoint || request.getEndpointName();
     var target_name = resource.getTargetName();
     
-      /*TODO: fast implementation of getPipeName?
-      need to get _n_ url params, see if they match a file on disk, load it up etc.
-      Cache pipeline metadata in memory? support one-level deep pipeline namespaces only?
-      */
+    /*TODO: fast implementation of getEndpointName?
+    need to get _n_ url params, see if they match a file on disk, load it up etc.
+    Cache endpoint metadata in memory? support one-level deep endpoint namespaces only?
+    */
     
-    var pipe = this.loadPipe(pipeName);
+    var endpoint = this.loadEndpoint(endpoint_name);
     
-    if !credentials.valid && !pipe.allowsAnon()
+    if !credentials.valid && !endpoint.allowsAnon()
       return("403 Forbidden");
     
     var target = http.get(target_name);
     
-    var result = pipe.run(pipeName, target);
+    var result = endpoint.run(pipeName, target);
     
     if this.redis_cache.available()
       this.redis_cache.store(request.url(), result);
   },
   
-  allowsAnon: function(pipeName){
+  allowsAnon: function(endpoint_name){
     //STUB
   },
   
-  loadPipe: function(pipeName, input){
+  loadEndpoint: function(name){
     //STUB
   },
 }

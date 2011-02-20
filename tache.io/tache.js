@@ -47,8 +47,8 @@ exports.init = function(){
   
   //use auth or not?
   //logging?
-  //locations of pipelines?
-      //pipeline location path retrieved from env, or config file etc.
+  //locations of endpoint code?
+      //endpoint location path retrieved from env, or config file etc.
   
   //setup Redis connection
   

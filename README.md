@@ -7,15 +7,16 @@ Tache.io enables remote clients (e.g. mobile apps) to receive Web resource in an
 
 ## Usage
 
-All client-facing functionality in Tache.io is grouped into *pipelines*.
+All client-facing functionality in Tache.io is grouped into *endpoints* that you write for specific purposes.
 
-Pipelines specify one or more *transformations* to run against a URL.
+Endpoints specify one or more *transformations* to run against a URL.
 
-Transformations can do anything they like to the received data. Some examples of actions you could take:
+Transformations are small, reusable code chunks that can do anything they like to the received data. Some examples of actions you could take:
 
-* Resize images
+* Resize/compress images
 * Scrape webpages to core-content form, à la [Readability](http://code.google.com/p/arc90labs-readability/)
-* Turn XML resources into JSON
+* Convert verbose resources & formats into lightweight over-the-wire formats
+    * e.g. get just what you need from a large XML resource as a small JSON document
 
 Simply make an HTTP `GET` request to your pipeline with a single parameter `url`. The URL given can be any resource that the Tache.io server can retrieve over HTTP -- this could be content on the public web, resources inside your network, etc.
 

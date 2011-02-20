@@ -1,4 +1,4 @@
-.DS_Store?
+.DS_Store
 Icon?
 
 # Thumbnails
@@ -7,3 +7,5 @@ Icon?
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
+*tmproj

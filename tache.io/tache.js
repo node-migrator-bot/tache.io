@@ -65,5 +65,5 @@ exports.init = function(){
     config.hostname,
     function(){
       sys.puts('Tache.io server running on '+ (config.hostname || '[INADDR_ANY]') + ':' + config.port );
-    });
+  });
 }

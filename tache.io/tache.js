@@ -149,6 +149,7 @@ var _endpointDone = function(request, content_type, resource) {
 
 exports.init = function(dir){
   
+  if (dir) require.paths.unshift(dir);
   //Read config
   var config_path =  process.argv[2] || 'tache-config.js';
   if(!fs.statSync(config_path).isFile())

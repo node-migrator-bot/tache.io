@@ -50,20 +50,25 @@ var onRequest = function(request, response){
     ?[request.headers['tache-endpoint'], request.url]
     :request.url.split(/\/(?=\w+:\/\/)/,2);
   
-  //TODO: this cleaning of urls etc needs a LOT of work
-  uri_parts[0] = uri_parts[0].replace(/\.+/,'.');   //strip any multiple instances of dots, prevent directory traversal
-  uri_parts[1] = uri_parts[1].replace(/^\//,'');    //can end up with a leading slash if endpoint is specified in header
   /* uri_parts will be one of:
+    ["", target_uri]
     [endpoint_name, target_uri]
     [endpoint_name]
     [endpoint_name/]
   */
-  console.log(util.inspect(uri_parts));
+  
+  var endpoint_name = uri_parts[0],
+      target_url    = uri_parts[1];
+  
+  //TODO: this cleaning of urls etc needs a LOT of work
+  endpoint_name = endpoint_name.replace(/\.+/,'.');   //strip any multiple instances of dots, prevent directory traversal
+  target_url = target_url.replace(/^\//,'');    //can end up with a leading slash if endpoint is specified in header
+  console.log(util.inspect([endpoint_name, target_url]));
   
   //TODO: if the endpoint name has a slash at the end, treat it sort of like
   //a HEAD request to the endpoint and return meta info
   try {
-    check(uri_parts[0]).regex(/(\w\.)+\w+/);
+    check(endpoint_name).regex(/(\w\.)+\w+/);
   } catch (e) {
     return fail(501,
       "Not Supported",
@@ -73,7 +78,7 @@ var onRequest = function(request, response){
   //if no URI specified (could happen with direct requests to root and an endpoint header)
   //TODO: node-validator only accepts http, https, ftp. Do i need to support more?
   try {
-    check(uri_parts[1]).isUrl();
+    check(target_url).isUrl();
   } catch (e) {
     return fail(404,
       "Not Found",
@@ -83,7 +88,8 @@ var onRequest = function(request, response){
   //TODO: check endpoint exists and load it (without killing server if it doesn't exist!)
   
   //got URL, so go fetch it
-  var target = url.parse(uri_parts[1]);
+  //parse URL, then rebuild in the form the HTTP[S].get() expects
+  var target = url.parse(target_url);
   var get_opts = {
     host: target.host,
     port: target.port || 80,

@@ -29,25 +29,23 @@ Tache.io will fetch the request specified by the URL, pass it through each trans
 
 ## Current status
 
-At present, Tache.io is just this readme file. Feel free to fork this project and help me build it. Suggestions and comments are always welcome; just add a feature request issue at https://github.com/orls/Tache.io/issues
+At present, Tache.io is just a skeleton of the overall architecture. It supports crudely-constructed endpoint, see `tests/noop.endpoint.js` as an example. Caching is not currently supported.
+
+Feel free to fork this project and help me build it. Suggestions and comments are always welcome; just add a feature request issue at https://github.com/orls/tache.io/issues
 
 ## Some thoughts and notes
 
-* Service access architecture options:
-    * Always POST: resource is returned
-        * Not very correct RESTfully. Pain the arse for client to implement?
-    * Try to GET, POST if not found. POST will return information about the newly created resource (`201 Created` status code, with `Location` header)
-        * most correct behaviour, but increases pain on the client's end:
-            * `GET /pipeline/target`
-            * If 404, `POST /pipeline` with target in body
-            * Wait for reply and follow the location header on `201 Created` reply
-            * More of a hassle to write code for than simply fire-and-forget
-    * Always GET with target URL appended
-        * e.g. GET /mypipe/subpipe/http://www.example.com/foo
-        * Feels a bit wrong having an HTTP url tacked on the end, but semi-legit.
-        * This behaviour becomes more like a (very nontransparent) proxy
-* Actually, that's an idea...
-    * Implement a full proxy mode? Clients attach the desired pipeline as a header.
-    * Could auto-select pipeline based on security credentials too
-    * If no pipeline specified/eligible, service just doesn't respond.
-    * Reduces management ability -- e.g forcing cache to clear, etc.
+## Roadmap and desireables
+
+* Plugin/modular cache support (to encourage other cache backends)
+* Other request styles, e.g. `?url=` param
+* Endpoint status/meta responses
+* HTTP authentication
+* SSL w/client certificate authentication
+* Management interface
+    * Enable/disable endpoints
+    * credentials mgmt
+    * Total cache sizes
+    * time to live
+    * selective cache cleardown tools
+* Optionally log events to remote analytics services.

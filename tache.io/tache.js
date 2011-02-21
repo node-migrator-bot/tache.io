@@ -6,21 +6,28 @@ var http  = require('http'),
     path  = require('path'),
     url   = require('url');
 
-var check = require('validator').check,
+var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
-var config = {};
-var defaults = {
-  port:8000,
-  cache:{
-    ttl:"1h",
-    disk:false,
-    redis:{
-      host:"127.0.0.1",
-      port:6379
-    }
-  }
-};
+var RequestProcessor = require('./request-processor');
+
+var config = {}, 
+    defaults = {
+      port:8000,
+      cache:{
+        ttl:"1h",
+        disk:false,
+        redis:{
+          host:"127.0.0.1",
+          port:6379
+        }
+      }
+    },
+    cache = {
+      enabled:false
+    };
+
+
 
 var setDefaults = function(to,from){
   var from = from || defaults;
@@ -88,48 +95,37 @@ var onRequest = function(request, response){
       "Target URL not specified, or invalid",e);
   }
   
-  //TODO: check endpoint exists and load it (without killing server if it doesn't exist!)
-  
-  try{
-    var endpoint = require(endpoint_name);
-    if(typeof endpoint.run != "function") throw new Error("Endpoint file " + endpoint_name + " loaded but no run function.");
-  } catch(e)
+  if( cache.enabled && cache.has(endpoint_name, target_url) )
   {
-    return request.fail(501,
-      "Endpoint not available",
-      "The required endpoint was not found or is unavailable",e);
+    cache.get(endpoint_name, target_url, function(cacheItem){
+      if ( !cacheItem.expired ){
+        //reply to client with content
+      }
+      else
+      {
+        cache.remove(endpoint_name, target_url);
+        //run the transformation for this request.
+        processor = new RequestProcessor();
+        processor.init(endpoint_name, target_url);
+      }
+    });
   }
   
-  //got URL, so go fetch it
-  //parse URL, then rebuild in the form the HTTP[S].get() expects
-  var target = url.parse(target_url);
-  var get_opts = {
-    host: target.host,
-    port: target.port || 80,
-    path: (target.pathname || "/") + (target.search || "") + (target.hash || "")
-  };
+  var processor = new RequestProcessor();
+  processor.init(endpoint_name, target_url);
   
-  console.log("Received URL: " + util.inspect(target));
-  
-  (target.protocol == 'https:'
-    ?https
-    :http).get(get_opts, function(remoteResponse) {
-      
-      //TODO: support non-UTF8: want untouched binary streams for things like images.
-      remoteResponse.setEncoding(encoding='utf8');
-      var remoteContent = "";
-      
-      remoteResponse.on('data', function (chunk) {
-        remoteContent += chunk;
-      });
-      
-      remoteResponse.on('end', function () {
-        endpoint.run(remoteResponse.headers['content-type'], remoteContent, endpointDone);
-      });
-      
-    }).on('error', function(e) {
-      console.log("Got error: " + e.message);
-    });
+  processor.on("complete", function(content_type, body){
+    //reply to client with content
+    request.reply(content_type, body);
+    
+    if(cache.enabled){
+      cache.store(endpoint_name,
+        target_url,
+        endpoint.ttl || config.ttl,
+        content_type,
+        body);
+    }
+  });
   
 }
 

@@ -1,3 +1,3 @@
-var tache = require("./tache.io");
+var tache = require("tache.io");
 
 tache.init();

@@ -1,4 +1,5 @@
 {
 "name":"tache.io",
-"main":"./tache.js"
+"main":"./tache.js",
+"version":"0.0.1"
 }

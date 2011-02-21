@@ -36,14 +36,17 @@ var setDefaults = function(to,from){
 
 var onRequest = function(request, response){
   
-  var fail = function(status,reason,msg){
+  request.fail = function(status,reason,msg,exception){
     _respond(response,status,reason,msg,'text-plain',function(){
+      if(exception) console.log(exception);
       console.log("Rejecting request to " + request.uri + ' : ' + msg);
-    });
-  };
-  var reply = function(content_type,body){
+    });};
+  request.reply  = function(content_type,body){
     _respond(response,200,"OK",body,content_type);
   };
+  
+  var endpointDone = function(content_type,body){_endpointDone(request,content_type,body);};
+
   //break request URI at the slash between the endpoint name and a URI protocol.
   //(if there's a URI after the endpoint, the slash between is removed here)
   var uri_parts = request.headers['tache-endpoint']
@@ -70,9 +73,9 @@ var onRequest = function(request, response){
   try {
     check(endpoint_name).regex(/(\w\.)+\w+/);
   } catch (e) {
-    return fail(501,
+    return request.fail(501,
       "Not Supported",
-      "Invalid endpoint name form");
+      "Invalid endpoint name form",e);
   }
   
   //if no URI specified (could happen with direct requests to root and an endpoint header)
@@ -80,12 +83,22 @@ var onRequest = function(request, response){
   try {
     check(target_url).isUrl();
   } catch (e) {
-    return fail(404,
+    return request.fail(404,
       "Not Found",
-      "No URL specified");
+      "Target URL not specified, or invalid",e);
   }
   
   //TODO: check endpoint exists and load it (without killing server if it doesn't exist!)
+  
+  try{
+    var endpoint = require(endpoint_name);
+    if(typeof endpoint.run != "function") throw new Error("Endpoint file " + endpoint_name + " loaded but no run function.");
+  } catch(e)
+  {
+    return request.fail(501,
+      "Endpoint not available",
+      "The required endpoint was not found or is unavailable",e);
+  }
   
   //got URL, so go fetch it
   //parse URL, then rebuild in the form the HTTP[S].get() expects
@@ -97,14 +110,12 @@ var onRequest = function(request, response){
   };
   
   console.log("Received URL: " + util.inspect(target));
-  console.log("Remote fetch data: " + util.inspect(get_opts));
-
   
   (target.protocol == 'https:'
     ?https
     :http).get(get_opts, function(remoteResponse) {
-      console.log("Got remote response: " + remoteResponse.statusCode);
-      //ugh, nasty hack to provide quick debug echo service
+      
+      //TODO: support non-UTF8: want untouched binary streams for things like images.
       remoteResponse.setEncoding(encoding='utf8');
       var remoteContent = "";
       
@@ -112,14 +123,13 @@ var onRequest = function(request, response){
         remoteContent += chunk;
       });
       
-      remoteResponse.on('end', function (chunk) {
-        _respond(response, remoteResponse.statusCode, "", remoteResponse.headers["content-type"],remoteContent);
+      remoteResponse.on('end', function () {
+        endpoint.run(remoteResponse.headers['content-type'], remoteContent, endpointDone);
       });
       
     }).on('error', function(e) {
       console.log("Got error: " + e.message);
     });
-  
   
 }
 
@@ -132,7 +142,12 @@ var _respond = function(response, status, reasonPhrase, content_type, body, afte
   if (after) after();
 }
 
-exports.init = function(){
+var _endpointDone = function(request, content_type, resource) {
+  console.log("Finished processing request to " + request.url);
+  request.reply(content_type, resource);
+};
+
+exports.init = function(dir){
   
   //Read config
   var config_path =  process.argv[2] || 'tache-config.js';

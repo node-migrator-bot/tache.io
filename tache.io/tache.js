@@ -40,9 +40,8 @@ var onRequest = function(request, response){
   
   //break request URI at the slash between the endpoint name and a URI protocol.
   //(if there's a URI after the endpoint, the slash between is removed here)
-  var uri_parts = request.headers['tache-endpoint']
-    ?[request.headers['tache-endpoint'], request.url]
-    :request.url.split(/\/(?=\w+:\/\/)/,2);
+  var uri_parts = request.url
+    .split(/\/(?=\w+:\/\/)/,2);   //FIXME -- broken!
   
   /* uri_parts will be one of:
     ["", target_uri]
@@ -51,18 +50,17 @@ var onRequest = function(request, response){
     [endpoint_name/]
   */
   
-  var endpoint_name = uri_parts[0],
-      target_url    = uri_parts[1];
+  //TODO: improve input escaping
+  var endpoint_name = sanitize(uri_parts[0] || request.headers['tache-endpoint'])
+      .trim('^A-Za-z0-9')   //trim non-word chars from ends
+      .replace(/\/+/,'/');  //remove multiple instances of slashes
+  var target_url = sanitize(uri_parts[1])
+      .ltrim('/')
   
-  //TODO: this cleaning of urls etc needs a LOT of work
-  endpoint_name = endpoint_name.replace(/\.+/,'.');   //strip any multiple instances of dots, prevent directory traversal
-  target_url = target_url.replace(/^\//,'');    //can end up with a leading slash if endpoint is specified in header
-  console.log(util.inspect([endpoint_name, target_url]));
-  
-  //TODO: if the endpoint name has a slash at the end, treat it sort of like
+  //TODO: if no url, treat requests like 
   //a HEAD request to the endpoint and return meta info
   try {
-    check(endpoint_name).regex(/(\w\.)+\w+/);
+    check(endpoint_name).regex(/(?:\w[\/\.]){1,}\w+/); //ensure enpoint is of the form foo.bar, foo/bar, foo.bar/bar/foo etc
   } catch (e) {
     return request.fail(501, "Not Supported",
       "Invalid endpoint name form",e);
@@ -76,6 +74,8 @@ var onRequest = function(request, response){
     return request.fail(404, "Not Found",
       "Target URL not specified, or invalid",e);
   }
+  
+  console.log('***' + endpoint_name + " | " + target_url + '***');
   
   if( cache.enabled && cache.has(endpoint_name, target_url) )
   {

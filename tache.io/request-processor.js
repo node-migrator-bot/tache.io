@@ -22,9 +22,9 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
   var self = this;
   try{
     var endpoint = require(endpoint_name);
-    if(typeof endpoint.run != "function"){
-      throw new Error("Endpoint file " + endpoint_name + " loaded but no run function.")
-    };
+    
+    //TODO: add new endpoint structural validation, make sure we're not about to call garbage.
+    
   } catch(e)
   {
     throw new Error({
@@ -55,7 +55,9 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
       });
       
       response.on('end', function () {
-        endpoint.run(response.headers['content-type'],
+        
+        endpoint.init(
+          response.headers['content-type'],
           content,
           function(content_type, body){
             self.emit('complete', content_type, body);

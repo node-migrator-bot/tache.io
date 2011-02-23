@@ -9,6 +9,7 @@ var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
 var RequestProcessor = require('./request-processor'),
+    Endpoint = exports.Endpoint = require('./endpoint'),
     util = require('./util');
 
 var config = {}, 
@@ -161,3 +162,4 @@ exports.init = function(dir){
       sys.puts('Tache.io server running on '+ (config.hostname || '[INADDR_ANY]') + ':' + config.port );
   });
 }
+

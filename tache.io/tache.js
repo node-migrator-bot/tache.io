@@ -2,14 +2,14 @@ var http  = require('http'),
     https = require('https'),
     sys   = require('sys'),
     fs    = require('fs'),
-    util  = require('util'),
     path  = require('path'),
     url   = require('url');
 
 var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
-var RequestProcessor = require('./request-processor');
+var RequestProcessor = require('./request-processor'),
+    util = require('./util');
 
 var config = {}, 
     defaults = {
@@ -27,24 +27,10 @@ var config = {},
       enabled:false
     };
 
-
-
-var setDefaults = function(to,from){
-  var from = from || defaults;
-  for (key in from){
-    if (!to.hasOwnProperty(key)){
-      to[key] = from[key];
-    }
-    if (typeof to[key] == 'object'){
-      setDefaults(to[key],from[key]);
-    }
-  }
-};
-
 var onRequest = function(request, response){
   
   request.fail = function(status,reason,msg,exception){
-    _respond(response,status,reason,msg,'text-plain',function(){
+    _respond(response,status,reason,'text-plain',msg+'\n',function(){
       if(exception) console.log(exception);
       console.log("Rejecting request to " + request.uri + ' : ' + msg);
     });};
@@ -52,8 +38,6 @@ var onRequest = function(request, response){
     _respond(response,200,"OK",body,content_type);
   };
   
-  var endpointDone = function(content_type,body){_endpointDone(request,content_type,body);};
-
   //break request URI at the slash between the endpoint name and a URI protocol.
   //(if there's a URI after the endpoint, the slash between is removed here)
   var uri_parts = request.headers['tache-endpoint']
@@ -80,8 +64,7 @@ var onRequest = function(request, response){
   try {
     check(endpoint_name).regex(/(\w\.)+\w+/);
   } catch (e) {
-    return request.fail(501,
-      "Not Supported",
+    return request.fail(501, "Not Supported",
       "Invalid endpoint name form",e);
   }
   
@@ -90,8 +73,7 @@ var onRequest = function(request, response){
   try {
     check(target_url).isUrl();
   } catch (e) {
-    return request.fail(404,
-      "Not Found",
+    return request.fail(404, "Not Found",
       "Target URL not specified, or invalid",e);
   }
   
@@ -138,11 +120,6 @@ var _respond = function(response, status, reasonPhrase, content_type, body, afte
   if (after) after();
 }
 
-var _endpointDone = function(request, content_type, resource) {
-  console.log("Finished processing request to " + request.url);
-  request.reply(content_type, resource);
-};
-
 exports.init = function(dir){
   
   if (dir) require.paths.unshift(dir);
@@ -163,7 +140,7 @@ exports.init = function(dir){
   //TOOD: Nice idea: watch config file for changes and dynamically reload?
   
   //establish defaults:
-  setDefaults(config);
+  util.merge(config, defaults);
   
   console.log("Full config is: " + util.inspect(config)+"\n");
   

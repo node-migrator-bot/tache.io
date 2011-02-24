@@ -121,11 +121,18 @@ var _respond = function(response, status, reasonPhrase, content_type, body, afte
   if (after) after();
 }
 
-exports.init = function(dir){
+exports.init = function(config_path,listen){
   
-  if (dir) require.paths.unshift(dir);
+  // flag to indicate whether the server should bind to a [host and] port.
+  // 99% of the time this will be true -- the major exception is running tests,
+  //where expresso does it for us.
+  if (listen !== false) listen = true
+  
   //Read config
-  var config_path =  process.argv[2] || 'tache-config.js';
+  config_path = config_path || 'tache-config.js';
+  
+  config_path = path.resolve(path.normalize(config_path));
+  
   if(!fs.statSync(config_path).isFile())
   {
     //not actually much point showing a real message here; statSync will blow up
@@ -135,7 +142,7 @@ exports.init = function(dir){
     return;
   }
   
-  console.log('Using config file '+ path.resolve(path.normalize(config_path)) + ':');
+  console.log('Using config file '+ config_path + ':');
   config = JSON.parse(fs.readFileSync(config_path, "utf8"));
   
   //TOOD: Nice idea: watch config file for changes and dynamically reload?
@@ -154,12 +161,16 @@ exports.init = function(dir){
   
   //setup server
   
-  http.createServer(onRequest)
-  .listen(
-    config.port,
-    config.hostname,
-    function(){
-      sys.puts('Tache.io server running on '+ (config.hostname || '[INADDR_ANY]') + ':' + config.port );
-  });
+  var server = http.createServer(onRequest);
+  if(listen){
+    server.listen(
+      config.port,
+      config.hostname,
+      function(){
+        sys.puts('Tache.io server running on '+ (config.hostname || '[INADDR_ANY]') + ':' + config.port );
+    });
+  }
+  
+  return server;
 }
 

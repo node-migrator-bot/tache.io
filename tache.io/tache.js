@@ -30,10 +30,11 @@ var config = {},
 
 var onRequest = function(request, response){
   
+  //bind some functions in to context
   request.fail = function(status,reason,msg,exception){
     _respond(response,status,reason,'text-plain',msg+'\n',function(){
       if(exception) console.log(exception);
-      console.log("Rejecting request to " + request.uri + ' : ' + msg);
+      console.log("Rejecting request to " + request.url + ' : ' + msg);
     });};
   request.reply  = function(content_type,body){
     _respond(response,200,"OK",body,content_type);
@@ -92,6 +93,10 @@ var onRequest = function(request, response){
           content_type,
           body);
       }
+    });
+
+    processor.on("critical", function(err){
+      return request.fail(err.status, err.reason, err.msg, err.thrown);
     });
 
     processor.init(endpoint_name, target_url);

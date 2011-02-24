@@ -24,14 +24,15 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
     var endpoint = require(endpoint_name);
     
     //TODO: add new endpoint structural validation, make sure we're not about to call garbage.
-    
   } catch(e)
   {
-    throw new Error({
+    self.emit('critical',{
+      status:404,
       reason:"Endpoint not available",
       msg:"The required endpoint was not found or is unavailable",
       thrown:e
     });
+    return false;
   }
   
   //parse URL, then rebuild in the form the HTTP[S].get() expects
@@ -55,7 +56,6 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
       });
       
       response.on('end', function () {
-        
         endpoint.init(
           response.headers['content-type'],
           content,
@@ -65,11 +65,13 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
       });
       
     }).on('error', function(e) {
-      throw new Error({
-        reason: "Retrieval error",
-        msg: "Couldn't get the remote resource.", 
-        thrown: e, 
+      self.emit('critical',{
+        status:404,
+        reason:"Remote error",
+        msg:"Couldn't fetch the remote resource",
+        thrown:e
       });
+      return false;
     });
 }
 

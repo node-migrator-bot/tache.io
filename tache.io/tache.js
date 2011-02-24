@@ -78,6 +78,25 @@ var onRequest = function(request, response){
   
   console.log('***' + endpoint_name + " | " + target_url + '***');
   
+  //Bind in the actual processing trigger, appropriate errors etc
+  var processRequest = function(){
+    var processor = new RequestProcessor();
+
+    processor.on("complete", function(content_type, body){
+      //reply to client with content
+      request.reply(content_type, body);
+      if(cache.enabled){
+        cache.store(endpoint_name,
+          target_url,
+          endpoint.ttl || config.ttl,
+          content_type,
+          body);
+      }
+    });
+
+    processor.init(endpoint_name, target_url);
+  };
+  
   if( cache.enabled && cache.has(endpoint_name, target_url) )
   {
     cache.get(endpoint_name, target_url, function(cacheItem){
@@ -86,31 +105,17 @@ var onRequest = function(request, response){
       }
       else
       {
+        //remove from cache and continue as normal
         cache.remove(endpoint_name, target_url);
-        //run the transformation for this request.
-        processor = new RequestProcessor();
-        processor.init(endpoint_name, target_url);
+        processRequest();
       }
     });
   }
-  
-  var processor = new RequestProcessor();
-  processor.init(endpoint_name, target_url);
-  
-  processor.on("complete", function(content_type, body){
-    //reply to client with content
-    request.reply(content_type, body);
-    
-    if(cache.enabled){
-      cache.store(endpoint_name,
-        target_url,
-        endpoint.ttl || config.ttl,
-        content_type,
-        body);
-    }
-  });
-  
-}
+  else
+  {
+    processRequest();
+  }
+};
 
 var _respond = function(response, status, reasonPhrase, content_type, body, after){
   response.writeHead(status, reasonPhrase || "", {

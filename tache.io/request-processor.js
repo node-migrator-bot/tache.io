@@ -18,10 +18,13 @@ RequestProcessor.prototype = Object.create(events.EventEmitter.prototype, {
 });
 
 
-RequestProcessor.prototype.init = function(endpoint_name, target_url){
+RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_url){
   var self = this;
+  
+  //Load the endpoint, validate it, emit errors if encountered.
   try{
-    var endpoint = require(endpoint_name);
+    console.log('Trying to load endpoint from ' + require.resolve(endpoint_path + endpoint_name));
+    var endpoint = require(endpoint_path + endpoint_name);
     
     //TODO: add new endpoint structural validation, make sure we're not about to call garbage.
   } catch(e)

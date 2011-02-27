@@ -104,7 +104,7 @@ var onRequest = function(request, response){
       return request.fail(err.status, err.reason, err.msg, err.thrown);
     });
 
-    processor.init(endpoint_name, target_url);
+    processor.init(config.paths.endpoints, endpoint_name, target_url);
   };
   
   if( cache.enabled && cache.has(endpoint_name, target_url) )

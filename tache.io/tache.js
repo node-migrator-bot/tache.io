@@ -42,8 +42,8 @@ var onRequest = function(request, response){
       console.log("Rejecting request to " + request.url + ' : ' + msg);
       if(exception) console.log('Request failed due to error:\n'+ exception.stack);
     });};
-  request.reply  = function(content_type,body){
-    _respond(response,200,"OK",body,content_type);
+  request.reply = function(content_type,body){
+    _respond(response,200,"OK",content_type, body);
   };
   
   //break request URI at the slash between the endpoint name and a URI protocol.

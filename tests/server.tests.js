@@ -1,7 +1,7 @@
 var tache = require("tache.io"),
     assert = require('assert');
 
-var server = tache.init('test-config.json',__dirname, false);
+var server = tache.init('test-config.json', false);
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key
 // (like an internationalization file). Would avoid having to duplicate them exactly here.

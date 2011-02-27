@@ -1,4 +1,5 @@
-var http   = require('http'),
+var assert = require('assert'),
+    http   = require('http'),
     https  = require('https'),
     util   = require('util'),
     url    = require('url'),
@@ -26,7 +27,7 @@ RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_
     console.log('Trying to load endpoint from ' + require.resolve(endpoint_path + endpoint_name));
     var endpoint = require(endpoint_path + endpoint_name);
     
-    //TODO: add new endpoint structural validation, make sure we're not about to call garbage.
+    assert.equal(typeof endpoint.go,'function');
   } catch(e)
   {
     self.emit('critical',{
@@ -59,7 +60,7 @@ RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_
       });
       
       response.on('end', function () {
-        endpoint.init(
+        endpoint.go(
           response.headers['content-type'],
           content,
           function(content_type, body){

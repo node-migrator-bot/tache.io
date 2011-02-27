@@ -8,4 +8,4 @@ as an example of a minimal script to get tache running.
 
 var tache = require("tache.io");
 
-var server = tache.init(process.argv[2]);
+tache.init(process.argv[2]);

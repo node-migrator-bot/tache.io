@@ -1,0 +1,6 @@
+{
+  "paths":{
+    "endpoints":"./",
+    "transforms":"../transforms"
+  }
+}

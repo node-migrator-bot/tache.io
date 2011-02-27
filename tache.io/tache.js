@@ -14,6 +14,11 @@ var RequestProcessor = require('./request-processor'),
 
 var config = {}, 
     defaults = {
+      paths:{
+        endpoints:'endpoints/',
+        transforms:'transforms/'
+        
+      },
       port:8000,
       cache:{
         ttl:"1h",
@@ -131,36 +136,51 @@ var _respond = function(response, status, reasonPhrase, content_type, body, afte
   if (after) after();
 }
 
-exports.init = function(config_path,listen){
+//TODO: allow direct invocation without a botostrap script, reading paths from argv / env variables?
+exports.init = function(config_file, listen){
   
   // flag to indicate whether the server should bind to a [host and] port.
   // 99% of the time this will be true -- the major exception is running tests,
   //where expresso does it for us.
-  if (listen !== false) listen = true
+  
+  if (listen !== false) listen = true;
   
   //Read config
-  config_path = config_path || 'tache-config.js';
-  
-  config_path = path.resolve(path.normalize(config_path));
-  
-  if(!fs.statSync(config_path).isFile())
+  //as this file's module parent is technically index.js, go one up for the actual calling file
+  var basepath = path.dirname(module.parent.parent.filename) + '/';
+  try
   {
-    //not actually much point showing a real message here; statSync will blow up
-    //if file not found.
-    sys.puts("Unable to start Tache.io: config file not found.");
-    //Cleanest way to kill a node app? Send signal or something?
-    return;
+    config_path = util.resolve(basepath, config_file, 'tache-config.json',util.RESOLVE_FILES_ONLY);
+  }catch(e){
+    throw new Error("Unable to start Tache.io: No config file: " + e.message);
   }
   
   console.log('Using config file '+ config_path + ':');
-  config = JSON.parse(fs.readFileSync(config_path, "utf8"));
   
-  //TOOD: Nice idea: watch config file for changes and dynamically reload?
+  try{
+    config = JSON.parse(fs.readFileSync(config_path, "utf8"));
+  }catch(e){
+    throw new Error("Unable to load config file: Check for JSON structural issues, e.g. fully double-quoted keys etc?\n\t"+e.message);
+  }
+  //TODO: Nice idea: watch config file for changes and dynamically reload?
   
   //establish defaults:
   util.merge(config, defaults);
   
-  console.log("Full config is: " + util.inspect(config)+"\n");
+  //Rewrite the basedir to be where the config file is. That's probably a more intuitive
+  //location to look for endpoint classes, transform functions than the bootstrapper
+  basepath = path.dirname(config_path) + '/';
+  
+  //Establish endpoint and tranform dirs
+  try{
+    ['endpoints','transforms'].forEach(function(item){
+      config.paths[item] = util.resolve(basepath, config.paths[item], item+'/', util.RESOLVE_DIRS_ONLY) + '/';
+    });
+  }catch(e){
+    throw new Error("Unable to find endpoint/tranform directories, please check your config\n\t"+e.message);
+  }
+  
+  console.log("Full runtime config is: " + util.inspect(config)+"\n");
   
   //use auth or not?
   //logging?

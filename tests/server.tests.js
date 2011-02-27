@@ -47,5 +47,31 @@ module.exports = {
       body:randomBodyContent
     });
   },
-
+  //note: relies on http://www.example.com 301ing to http://www.iana.org/domains/example/
+  //(correct as of 27 Feb 2011)
+  "Follows redirects":function(beforeExit){
+    var ianaBody = "";
+    done = false;
+    http.get({
+      host:'www.iana.org', port:80, path:'/domains/example/'
+    },function(res) {
+      res.setEncoding(encoding='utf8');
+      
+      res.on('data', function (chunk) {
+        ianaBody += chunk;
+      });
+      
+      res.on('end', function(){
+        assert.response(server, {
+          url:"/echo.noop/http://www.example.com/"
+        },{
+          body:ianaBody
+        });
+        done = true;
+      });
+    });
+    
+    beforeExit(function(){assert.ok(done);});
+  }
 }
+

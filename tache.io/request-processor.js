@@ -42,7 +42,7 @@ RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_
   //parse URL, then rebuild in the form the HTTP[S].get() expects
   var target   = url.parse(target_url),
       get_opts = {
-        host: target.host,
+        host: (target.auth ? target.auth+'@'+target.hostname : target.hostname),
         port: target.port || 80,
         path: (target.pathname || "/") + (target.search || "") + (target.hash || "")
       };
@@ -61,8 +61,8 @@ RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_
       
       response.on('end', function () {
         endpoint.go(
-          response.headers['content-type'],
-          content,
+          response.headers['content-type'] || '',
+          content || '',
           function(content_type, body){
             self.emit('complete', content_type, body);
           });

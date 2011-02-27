@@ -5,6 +5,8 @@ var assert = require('assert'),
     url    = require('url'),
     events = require('events');
 
+var Endpoint = require('./endpoint');
+
 function RequestProcessor() {
     events.EventEmitter.call(this);
     this.super = events.EventEmitter;
@@ -25,7 +27,8 @@ RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_
   //Load the endpoint, validate it, emit errors if encountered.
   try{
     console.log('Trying to load endpoint from ' + require.resolve(endpoint_path + endpoint_name));
-    var endpoint = require(endpoint_path + endpoint_name);
+    var endpoint_def = require(endpoint_path + endpoint_name);
+    var endpoint = new Endpoint(endpoint_def);
     
     assert.equal(typeof endpoint.go,'function');
   } catch(e)

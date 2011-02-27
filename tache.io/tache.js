@@ -29,6 +29,7 @@ var config = {},
         }
       }
     },
+    //just a quick hack to test top-level cache flow. Will be a loaded object
     cache = {
       enabled:false
     };
@@ -38,8 +39,8 @@ var onRequest = function(request, response){
   //bind some functions in to context
   request.fail = function(status,reason,msg,exception){
     _respond(response,status,reason,'text-plain',msg+'\n',function(){
-      if(exception) console.log(exception);
       console.log("Rejecting request to " + request.url + ' : ' + msg);
+      if(exception) console.log('Request failed due to error:\n'+ exception.stack);
     });};
   request.reply  = function(content_type,body){
     _respond(response,200,"OK",body,content_type);

@@ -1,4 +1,5 @@
-var tache = require("tache.io"),
+var http   = require('http'),
+    tache  = require("tache.io"),
     assert = require('assert');
 
 var server = tache.init('test-config.json', false);
@@ -25,6 +26,26 @@ module.exports = {
     },{
       body:responses.bad_endpoint
     });
-  }
+  },
+  "No-op echoes content": function(){
+    //spool up a hello world server
+    var randomBodyContent = (Math.random() * 100000) + '\n';
+    var testServer = http.createServer(function(req, res){
+        res.writeHead(200, {
+          'Content-Length': randomBodyContent.length,
+          'Content-Type': 'text/plain' });
+        req.on('end', function(){
+            res.end(randomBodyContent);
+            testServer.close();
+        });
+    });
+    testServer.listen(3000);
+    
+    assert.response(server, {
+      url:"/echo.noop/http://127.0.0.1:3000/"
+    },{
+      body:randomBodyContent
+    });
+  },
 
 }

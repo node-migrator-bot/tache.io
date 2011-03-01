@@ -2,6 +2,13 @@ var util = require('util'),
     fs   = require('fs'),
     path = require('path');
 
+util.freeze = function(obj){
+  for (key in obj){
+    if (typeof obj[key] == 'object')
+      util.freeze(obj[key]);
+  }
+  Object.freeze(obj);
+}
 //crude recursive copy func for objects only
 util.merge = function(to,from){
   for (key in from){

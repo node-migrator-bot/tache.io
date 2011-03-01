@@ -78,14 +78,14 @@ var fetch = function(self, target_url, endpoint, redirects) {
     });
 }
 
-RequestProcessor.prototype.init = function(endpoint_path, endpoint_name, target_url){
+RequestProcessor.prototype.init = function(endpoint_name, target_url){
   var self = this;
   
   //Load the endpoint, validate it, emit errors if encountered.
   try{
-    //console.log('Trying to load endpoint from ' + require.resolve(endpoint_path + endpoint_name));
-    var endpoint_def = require(endpoint_path + endpoint_name);
-    var endpoint = new Endpoint(endpoint_def);
+    var endpoint_def = require(require('./tache').Config.paths.endpoints + endpoint_name),
+        endpoint     = new Endpoint(endpoint_def);
+    
     assert.equal(typeof endpoint.go,'function');
   } catch(e)
   {

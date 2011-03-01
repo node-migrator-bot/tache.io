@@ -12,7 +12,7 @@ var RequestProcessor = require('./request-processor'),
     Endpoint = exports.Endpoint = require('./endpoint'),
     util = require('./util');
 
-var config = {}, 
+var config = exports.Config = {},
     defaults = {
       paths:{
         endpoints:'endpoints/',
@@ -95,7 +95,6 @@ var onRequest = function(request, response){
       if(cache.enabled){
         cache.store(endpoint_name,
           target_url,
-          endpoint.ttl || config.ttl,
           content_type,
           body);
       }
@@ -105,7 +104,7 @@ var onRequest = function(request, response){
       return request.fail(err.status, err.reason, err.msg, err.thrown);
     });
 
-    processor.init(config.paths.endpoints, endpoint_name, target_url);
+    processor.init(endpoint_name, target_url);
   };
   
   if( cache.enabled && cache.has(endpoint_name, target_url) )
@@ -137,7 +136,7 @@ var _respond = function(response, status, reasonPhrase, content_type, body, afte
   if (after) after();
 }
 
-//TODO: allow direct invocation without a botostrap script, reading paths from argv / env variables?
+//TODO: allow direct invocation without a bootstrap script, reading paths from argv / env variables?
 exports.init = function(config_file, listen){
   
   // flag to indicate whether the server should bind to a [host and] port.
@@ -182,6 +181,9 @@ exports.init = function(config_file, listen){
   }
   
   console.log("Full runtime config is: " + util.inspect(config)+"\n");
+  
+  exports.Config = config;
+  util.freeze(config);
   
   //use auth or not?
   //logging?

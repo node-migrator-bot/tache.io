@@ -8,8 +8,9 @@ var http  = require('http'),
 var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
-var RequestProcessor = require('./request-processor'),
+var Cache = require('./redis-cache'),
     Endpoint = exports.Endpoint = require('./endpoint'),
+    RequestProcessor = require('./request-processor'),
     util = require('./util');
 
 var config = exports.Config = {},
@@ -29,10 +30,7 @@ var config = exports.Config = {},
         }
       }
     },
-    //just a quick hack to test top-level cache flow. Will be a loaded object
-    cache = {
-      enabled:false
-    };
+    cache = new Cache();
 
 var onRequest = function(request, response){
   
@@ -90,13 +88,16 @@ var onRequest = function(request, response){
     var processor = new RequestProcessor();
 
     processor.on("complete", function(content_type, body){
+      
       //reply to client with content
       request.reply(content_type, body);
-      if(cache.enabled){
+      if(cache.available){
         cache.store(endpoint_name,
           target_url,
           content_type,
-          body);
+          body, function(error) {
+          }
+        );
       }
     });
 
@@ -106,23 +107,16 @@ var onRequest = function(request, response){
 
     processor.init(endpoint_name, target_url);
   };
-  
-  if( cache.enabled && cache.has(endpoint_name, target_url) )
-  {
-    cache.get(endpoint_name, target_url, function(cacheItem){
-      if ( !cacheItem.expired ){
-        //reply to client with content
-      }
-      else
-      {
-        //remove from cache and continue as normal
-        cache.remove(endpoint_name, target_url);
+  if(cache.available && !request.headers['x-tache-nocache']) {
+    cache.get(endpoint_name, target_url, function(error, cacheItem) {
+      //no item returned means the cache didn't have it, proceed as usual
+      if (!cacheItem || cacheItem.expired){
         processRequest();
+      } else {
+        request.reply(cacheItem.content_type, cacheItem.body);
       }
     });
-  }
-  else
-  {
+  } else {
     processRequest();
   }
 };
@@ -190,7 +184,9 @@ exports.init = function(config_file, listen){
   //locations of endpoint code?
       //endpoint location path retrieved from env, or config file etc.
   
-  //setup Redis connection
+  //setup Cache object
+  cache.init(config.cache);
+  
   
   //setup server
   
@@ -206,4 +202,3 @@ exports.init = function(config_file, listen){
   
   return server;
 }
-

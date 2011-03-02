@@ -1,6 +1,8 @@
 var events = require('events'),
     redis  = require('redis');
 
+var tache = require('./tache'),
+    util = require('./util');
 
 var available = false, client;
     
@@ -20,11 +22,10 @@ RedisCache.prototype = Object.create(events.EventEmitter.prototype, {
   }
 });
 
-RedisCache.prototype.init = function(config){
-  this.config = config;
+RedisCache.prototype.init = function(){
   console.log('**** REDIS-CACHE INITALIZING***');
-  console.log(config.redis.port, config.redis.host);
-  client = redis.createClient(config.redis.port, config.redis.host);
+  console.log(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
+  client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
   
   client.on('connect',function() {
     console.log('RC  |  Redis Cache is now available');
@@ -54,9 +55,13 @@ RedisCache.prototype.get = function(endpoint_name, url, done){
 RedisCache.prototype.store = function(endpoint_name, url, content_type, body, done){
   var key = this.key(endpoint_name, url);
   client.hmset(key, {content_type:content_type, body:body},function(error){
-    client.expire(key, 15, function(error) {
-      done(error);
-    });
+    client.expire(
+      key,
+      util.interval(
+        tache.Config.cache.redis.ttl || tache.Config.cache.ttl)
+      .seconds,
+      function(error) { done(error); }
+    );
   });
   
   

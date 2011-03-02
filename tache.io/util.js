@@ -58,4 +58,113 @@ util.resolve = function(basepath, input, _default, rule) {
   else throw new Error("Unable to find path '"+input+"' in expected locations ("+paths+")");
 };
 
+//Rudely cribbed from https://github.com/onewland/blog/blob/master/js-files/pt-2/cron.js
+//with some additions/tweaks to support a terser syntax. ('1h 5s')
+
+function TimeInterval() {
+  this.seconds = 0;
+  this.addTo = function(ti) {
+    this.seconds += ti.seconds;
+    return this;
+  };
+}
+
+function generate_multiplier(multiplier)
+{
+  return function() {
+    var interval = new TimeInterval(); // use var keyword!
+    interval.seconds = this * multiplier;
+    return interval;
+  };
+}
+
+Number.prototype.seconds = generate_multiplier(1);
+Number.prototype.minutes = generate_multiplier(60);
+Number.prototype.hours = generate_multiplier(3600);
+Number.prototype.days = generate_multiplier(86400);
+
+util.interval = function(time) {
+  var unitMatch = 'mo(?:nth(?:s?))?|w(?:eek(?:s?))?|d(?:ay(?:s?))?|h(?:our(?:s?))?|m(?:inute(?:s?))?|s(?:econd(?:s?))?';
+  if(time instanceof TimeInterval)
+  {
+    return time;
+  }
+  
+  else if(typeof(time) == 'string')
+  {
+    var interval = new TimeInterval();
+    if(time.match(new RegExp("^(\\d+) ?(" + unitMatch + ")")))
+    {
+      var clauses = time.split(/(\b|[^smohwkdyre])+(?=\d)/);
+      var clauses_length = clauses.length;
+
+      for(var i = 0; i < clauses_length; i++)
+      {
+        var clause_parsed = clauses[i].match(new RegExp("(\\d+) ?(" + unitMatch + ")"));
+        if(clause_parsed != null)
+        {
+          var time = clause_parsed[1];
+          var unit = clause_parsed[2];
+          switch(unit)
+          {
+            case 'm': 
+            case 'minute': 
+              interval.addTo((+time).minutes());
+              break;
+            case 'h': 
+            case 'hour': 
+              interval.addTo((+time).hours());
+              break;
+            case 's': 
+            case 'second': 
+              interval.addTo((+time).seconds());
+              break;
+            case 'd': 
+            case 'day': 
+              interval.addTo((+time).days());
+              break;
+            case 'w': 
+            case 'week': 
+              interval.addTo(((+time)*7).days());
+              break;
+            case 'mo': 
+            case 'month': 
+              interval.addTo(((+time)*7).days());
+              break;
+          }
+        }
+      }
+    } 
+
+    else
+    {
+      var unit_parse = time.match(new RegExp(unitMatch));
+
+      if(unit_parse != null)
+      {
+        switch(unit_parse[0])
+        {
+          case 'm': 
+          case 'minute':
+            interval.addTo((1).minutes());
+            break;
+          case 'h': 
+          case 'hour': 
+            interval.addTo((1).hours());
+            break;
+          case 's': 
+          case 'second': 
+            interval.addTo((1).seconds());
+            break;
+          case 'd': 
+          case 'day': 
+            interval.addTo((1).days());
+            break;
+        }
+      }
+    }
+    return interval;
+  }
+}
+
 module.exports = exports = util;

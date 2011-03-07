@@ -25,17 +25,28 @@ RedisCache.prototype = Object.create(events.EventEmitter.prototype, {
 RedisCache.prototype.init = function(){
   console.log('**** REDIS-CACHE INITALIZING***');
   console.log(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
-  client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
   
-  client.on('connect',function() {
-    console.log('RC  |  Redis Cache is now available');
-    available = true;
-  });
+  try {
+    client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
   
-  client.on('end',function() {
-    console.log('RC  |  Redis Cache is no longer available!');
-    available = false;
-  });
+    client.on('connect',function() {
+      console.log('RC  |  Redis Cache is now available');
+      available = true;
+    });
+    
+    client.on('error',function(err) {
+      console.log('RC  |  Error connecting to Redis server! ' + err.message);
+      available = false;
+    });
+  
+    client.on('end',function() {
+      console.log('RC  |  Redis Cache is no longer connected!');
+      available = false;
+    });
+    
+  }catch(e){
+    //swallow connection errors for now.
+  }
 }
 
 RedisCache.prototype.get = function(endpoint_name, url, done){

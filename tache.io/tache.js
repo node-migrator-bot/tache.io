@@ -200,5 +200,9 @@ exports.init = function(config_file, listen){
     });
   }
   
+  server.on('close', function () {
+    cache.close();
+  });
+  
   return server;
 }

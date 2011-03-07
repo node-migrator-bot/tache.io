@@ -74,13 +74,22 @@ RedisCache.prototype.store = function(endpoint_name, url, content_type, body, do
       function(error) { done(error); }
     );
   });
-  
-  
 }
 
 RedisCache.prototype.key = function(endpoint_name, url) {
   //TODO: would like to disambiguate variants on URLS -- maybe use node to parse URL, hash the host, port, path and endpoint_name together?
   return (endpoint_name+':'+url);
+};
+
+RedisCache.prototype.close = function() {
+  client.quit();
+  //if the client hasn't quit fast enough, kill it.
+  setTimeout(function() {
+      try{
+        client.end();
+      }catch(e){}
+    },util.interval('2s').seconds //TODO: make this timeout configurable
+  );
 };
 
 module.exports = exports = RedisCache;

@@ -22,6 +22,7 @@ var config = exports.Config = {},
       },
       port:8000,
       cache:{
+        enabled:true,
         ttl:"1h",
         disk:false,
         redis:{
@@ -88,10 +89,9 @@ var onRequest = function(request, response){
     var processor = new RequestProcessor();
 
     processor.on("complete", function(content_type, body){
-      
       //reply to client with content
       request.reply(content_type, body);
-      if(cache.available){
+      if(cache && cache.available){
         cache.store(endpoint_name,
           target_url,
           content_type,
@@ -104,10 +104,10 @@ var onRequest = function(request, response){
     processor.on("critical", function(err){
       return request.fail(err.status, err.reason, err.msg, err.thrown);
     });
-
     processor.init(endpoint_name, target_url);
   };
-  if(cache.available && !request.headers['x-tache-nocache']) {
+  
+  if(cache && cache.available && !request.headers['x-tache-nocache']) {
     cache.get(endpoint_name, target_url, function(error, cacheItem) {
       //no item returned means the cache didn't have it, proceed as usual
       if (!cacheItem || cacheItem.expired){
@@ -186,8 +186,9 @@ exports.init = function(config_file, listen){
       //endpoint location path retrieved from env, or config file etc.
   
   //setup Cache object
-  cache.init(config.cache);
-  
+  if(config.cache.enabled){
+    cache.init(config.cache);
+  }
   
   //setup server
   

@@ -36,10 +36,11 @@ var config = exports.Config = {},
 var onRequest = function(request, response){
   
   //bind some functions in to context
-  request.fail = function(status,reason,msg,exception){
+  //TODO: set up a top-level response timeout just in case everything blows up?
+  request.fail  = function(status,reason,msg,exception){
     _respond(response,status,reason,'text-plain',msg+'\n',function(){
       console.log("Rejecting request to " + request.url + ' : ' + msg);
-      if(exception) console.log('Request failed due to error:\n'+ exception.stack);
+      //if(exception) console.log('Request failed due to error:\n'+ exception.stack);
     });};
   request.reply = function(content_type,body){
     _respond(response,200,"OK",content_type, body);
@@ -96,6 +97,7 @@ var onRequest = function(request, response){
           target_url,
           content_type,
           body, function(error) {
+            console.log('Response from storing redis value: '+(error || 'Success!'));
           }
         );
       }

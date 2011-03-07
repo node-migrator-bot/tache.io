@@ -1,5 +1,20 @@
 {
-"name":"tache.io",
-"main":"./tache.js",
-"version":"0.0.1"
+  "name": "tache.io",
+  "main": "./tache.js",
+  "version": "0.0.1",
+  "author": "Owen Smith <owen@orls.co.uk>",
+  "repository":
+  {
+    "url": "https://orls@github.com/orls/tache.io.git"
+  },
+  "dependencies": {
+    "validator": ">=0.1.7",
+    "redis": ">=0.5.6"
+  },
+  "devDependencies": {
+    "expresso": ">=0.7.2"
+  },
+  "engines": {
+    "node": ">=0.4.0"
+  }
 }

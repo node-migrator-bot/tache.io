@@ -140,8 +140,9 @@ exports.init = function(config_file, listen){
   if (listen !== false) listen = true;
   
   //Read config
-  //as this file's module parent is technically index.js, go one up for the actual calling file
-  var basepath = path.dirname(module.parent.parent.filename) + '/';
+  //find the path of the file that invoked us.
+  //TODO: support repl?
+  var basepath = path.dirname(module.parent.filename) + '/';
   try
   {
     config_path = util.resolve(basepath, config_file, 'tache-config.json',util.RESOLVE_FILES_ONLY);

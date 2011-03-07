@@ -42,7 +42,8 @@ module.exports = {
     testServer.listen(3000);
     
     assert.response(server, {
-      url:"/echo.noop/http://127.0.0.1:3000/"
+      url:"/echo.noop/http://127.0.0.1:3000/",
+      headers:{'x-tache-nocache':'true'} //clear out the cache -- multiple frequent test runs agains the same redis sever will have some other value stored
     },{
       body:randomBodyContent
     });

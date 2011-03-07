@@ -3,6 +3,7 @@ var http   = require('http'),
     assert = require('assert');
 
 var server = tache.init('test-config.json', false);
+var offlineOnly = (process.argv[3] == "offline");
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key
 // (like an internationalization file). Would avoid having to duplicate them exactly here.
@@ -11,7 +12,6 @@ var responses = {
 };
 
 module.exports = {
-
   "Unknown endpoint 404":function(){
     assert.response(server, {
       url:"/qwertyuiop/asdfghjkl/http://www.example.com"
@@ -46,12 +46,19 @@ module.exports = {
     },{
       body:randomBodyContent
     });
-  },
+  }
+}
+
+if(!offlineOnly){
+  //add tests that depend on remote resources.
+  
+  
   //note: relies on http://www.example.com 301ing to http://www.iana.org/domains/example/
   //(correct as of 27 Feb 2011)
-  "Follows redirects":function(beforeExit){
-    var ianaBody = "";
-    done = false;
+  module.exports["Follows redirects"] = function(beforeExit){
+    var ianaBody = "",
+        done = false;
+        
     http.get({
       host:'www.iana.org', port:80, path:'/domains/example/'
     },function(res) {
@@ -70,8 +77,7 @@ module.exports = {
         done = true;
       });
     });
-    
     beforeExit(function(){assert.ok(done);});
-  }
+  };
 }
 

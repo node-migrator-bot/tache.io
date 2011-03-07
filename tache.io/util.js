@@ -22,8 +22,8 @@ util.merge = function(to,from){
 };
 
 /* tries to find the following, in this order:
-a) given on its own
-b) basepath + given,
+a) basepath + given,
+b) given on its own
 c) basepath + default
 
 Works for directories or files, emits an error if none of the above are available.
@@ -33,13 +33,13 @@ util.RESOLVE_DIRS_ONLY = -1;
 util.RESOLVE_DIRS_ONLY = 1;
 util.resolve = function(basepath, input, _default, rule) {
   var foundPath = false,
-      paths     = [input || false,
-                  input ? path.resolve(basepath, input):false,
+      paths     = [input ? path.resolve(basepath, input):false,
+                  input || false,
                   path.resolve(basepath, _default)];
   
   for (var i in paths){
     if (!paths[i]) continue;
-    //bit of a messy ack with the try/catch and statSync, to emulate a synchronous path.exists
+    //bit of a messy hack with the try/catch and statSync, to emulate a synchronous path.exists
     try{
       var stats = fs.statSync(path.normalize(paths[i]));
       if(

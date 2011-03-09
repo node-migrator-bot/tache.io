@@ -3,7 +3,8 @@ var http  = require('http'),
     sys   = require('sys'),
     fs    = require('fs'),
     path  = require('path'),
-    url   = require('url');
+    url   = require('url'),
+    connect = require('connect');
 
 var check    = require('validator').check,
     sanitize = require('validator').sanitize;
@@ -33,7 +34,7 @@ var config = exports.Config = {},
     },
     cache = new Cache();
 
-var onRequest = function(request, response){
+var _prepare = function(request, response, next){
   
   //bind some functions in to context
   //TODO: set up a top-level response timeout just in case everything blows up?
@@ -86,41 +87,27 @@ var onRequest = function(request, response){
   console.log('***' + endpoint_name + " | " + target_url + '***');
   
   //Bind in the actual processing trigger, appropriate errors etc
-  var processRequest = function(){
-    var processor = new RequestProcessor();
-
-    processor.on("complete", function(content_type, body){
-      //reply to client with content
-      request.reply(content_type, body);
-      if(cache && cache.available){
-        cache.store(endpoint_name,
-          target_url,
-          content_type,
-          body, function(error) {
-            console.log('Response from storing redis value: '+(error || 'Success!'));
-          }
-        );
-      }
-    });
-
-    processor.on("critical", function(err){
-      return request.fail(err.status, err.reason, err.msg, err.thrown);
-    });
-    processor.init(endpoint_name, target_url);
-  };
   
-  if(cache && cache.available && !request.headers['x-tache-nocache']) {
-    cache.get(endpoint_name, target_url, function(error, cacheItem) {
-      //no item returned means the cache didn't have it, proceed as usual
-      if (!cacheItem || cacheItem.expired){
-        processRequest();
-      } else {
-        request.reply(cacheItem.content_type, cacheItem.body);
-      }
-    });
-  } else {
-    processRequest();
-  }
+  request.endpoint = endpoint_name;
+  request.target = target_url;
+  
+  next();
+};
+
+var _process = function(request, response) { //No 'next' -- forces this to always be the bottom of the stack (desireable?)
+  var processor = new RequestProcessor();
+
+  processor.on("complete", function(content_type, body){
+    //reply to client with content
+    request.reply(content_type, body);
+  });
+
+  processor.on("critical", function(err){
+    return request.fail(err.status, err.reason, err.msg, err.thrown);
+  });
+  
+  processor.init(request.endpoint, request.target);
+  
 };
 
 var _respond = function(response, status, reasonPhrase, content_type, body, after){
@@ -194,7 +181,13 @@ exports.init = function(config_file, listen){
   
   //setup server
   
-  var server = http.createServer(onRequest);
+  var server = connect()
+    .use(connect.logger())
+    .use(connect.profiler())
+    .use(_prepare)
+    .use(Cache.connectAdapter())
+    .use('/',_process);
+    
   if(listen){
     server.listen(
       config.port,

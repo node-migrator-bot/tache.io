@@ -5,7 +5,8 @@ var tache = require('./tache'),
     util = require('./util');
 
 var available = false, client;
-    
+
+var cache;    
 
 function RedisCache() {
     events.EventEmitter.call(this);
@@ -88,8 +89,58 @@ RedisCache.prototype.close = function() {
       try{
         client.end();
       }catch(e){}
-    },util.interval('2s').seconds //TODO: make this timeout configurable
-  );
+    },
+    util.interval('2s').seconds); //TODO: make this timeout configurable
 };
 
 module.exports = exports = RedisCache;
+
+var prepare_bubble = function(res, req, next){
+  var _reply = req.reply;
+  
+  req.reply = function(content_type, body) {
+    console.log("intercepting reply call");
+    //try to store in cache
+    if(cache && cache.available){
+      cache.store(request.endpoint,
+        request.target,
+        content_type,
+        body, function(error) {
+          console.log('Response from storing redis value: '+(error || 'Success!'));
+        }
+      );
+    }
+    console.log("Trying to call normal reply fn");
+    req.reply = _reply;
+    req.reply(content_type, body);
+  };
+  
+  next();
+}
+
+module.exports.connectAdapter = exports.connectAdapter = RedisCache.connectAdapter = function(config) {
+  //setup:
+  cache = new RedisCache(); //TODO: use config passed in
+  
+  //return handler for the 'capture phase'
+  return function(req,res,next) {
+    if(cache && cache.available //If there is a cache obj
+      && !req.headers['x-tache-nocache'] //and this request didn't ask to skip the cache
+      && req.endpoint && req.target)  // and this request has been preprocessed   //todo: when spinning off the cache to a separate project, this should just be a cacheKey property
+    {
+      //try to fetch from the cache
+      cache.get(req.endpoint, req.target, function(error, cacheItem) {
+        //no item returned means the cache didn't have it, proceed as usual
+        if (!cacheItem || cacheItem.expired){
+          prepare_bubble(req,res,next);
+        } else {
+          req.reply(cacheItem.content_type, cacheItem.body);
+        }
+      });
+    }
+    else
+    {
+      prepare_bubble(req,res,next);
+    }
+  };
+};

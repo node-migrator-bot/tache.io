@@ -9,7 +9,7 @@ var http  = require('http'),
 var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
-var Cache = require('./redis-cache'),
+var rediscache = require('./redis-cache'),
     Endpoint = exports.Endpoint = require('./endpoint'),
     RequestProcessor = require('./request-processor'),
     util = require('./util');
@@ -31,8 +31,7 @@ var config = exports.Config = {},
           port:6379
         }
       }
-    },
-    cache = new Cache();
+    };
 
 var _prepare = function(request, response, next){
   
@@ -174,18 +173,15 @@ exports.init = function(config_file, listen){
   //locations of endpoint code?
       //endpoint location path retrieved from env, or config file etc.
   
-  //setup Cache object
-  if(config.cache.enabled){
-    cache.init(config.cache);
-  }
   
   //setup server
   
   var server = connect()
     .use(connect.logger())
     .use(connect.profiler())
-    .use(_prepare)
-    .use(Cache.connectAdapter())
+    .use(_prepare);
+  server    //would love to chain these all; this is a (rather iffy) hack so this redis cache instance can bind to the server's end evt.
+    .use(rediscache(config.cache, server))
     .use('/',_process);
     
   if(listen){
@@ -194,12 +190,8 @@ exports.init = function(config_file, listen){
       config.hostname,
       function(){
         sys.puts('Tache.io server running on '+ (config.hostname || '[INADDR_ANY]') + ':' + config.port );
-    });
+      });
   }
-  
-  server.on('close', function () {
-    cache.close();
-  });
   
   return server;
 }

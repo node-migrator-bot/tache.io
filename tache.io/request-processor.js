@@ -23,14 +23,17 @@ RequestProcessor.prototype = Object.create(events.EventEmitter.prototype, {
 });
 
 //'private' method to actually run requests
-var fetch = function(self, target_url, endpoint, redirects) {
+var fetch = function(self, target_url, endpoint, redirects, cookies) {
   var redirects = redirects || 0,
       //parse URL, then rebuild in the form the HTTP[S].get() expects
       target    = url.parse(target_url),
       get_opts  = {
         host: (target.auth ? target.auth+'@'+target.hostname : target.hostname),
         port: target.port || 80,
-        path: (target.pathname || "/") + (target.search || "") + (target.hash || "")
+        path: (target.pathname || "/") + (target.search || "") + (target.hash || ""),
+        headers:{
+          'Cookie':(cookies || "")
+        }
       };
 
   (target.protocol == 'https:'
@@ -46,7 +49,12 @@ var fetch = function(self, target_url, endpoint, redirects) {
           });
           return false;
         }else{
-          return fetch(self, response.headers['location'], endpoint, ++redirects);
+          var cookies = cookies || "";
+          if(response.headers['set-cookie'])
+          {
+            cookies += '; ' + response.headers['set-cookie'];
+          }
+          return fetch(self, response.headers['location'], endpoint, ++redirects, cookies);
         }
       }
 

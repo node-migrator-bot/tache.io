@@ -23,7 +23,8 @@ RequestProcessor.prototype = Object.create(events.EventEmitter.prototype, {
 });
 
 //'private' method to actually run requests
-var fetch = function(self, target_url, endpoint, redirects, cookies) {
+var fetch = function(self, target_url, callback, redirects, cookies) {
+  console.log(">>>>>>>>>>>>>>>>>>> Fetching remote resource "+ target_url);
   var redirects = redirects || 0,
       //parse URL, then rebuild in the form the HTTP[S].get() expects
       target    = url.parse(target_url),
@@ -49,12 +50,12 @@ var fetch = function(self, target_url, endpoint, redirects, cookies) {
           });
           return false;
         }else{
-          var cookies = cookies || "";
+          cookies = cookies || "";
           if(response.headers['set-cookie'])
           {
             cookies += '; ' + response.headers['set-cookie'];
           }
-          return fetch(self, response.headers['location'], endpoint, ++redirects, cookies);
+          return fetch(self, response.headers['location'], callback, ++redirects, cookies);
         }
       }
 
@@ -66,14 +67,7 @@ var fetch = function(self, target_url, endpoint, redirects, cookies) {
         content += chunk;
       });
 
-      response.on('end', function () {
-        endpoint.go(
-          response.headers['content-type'] || '',
-          content || '',
-          function(content_type, body){
-            self.emit('complete', content_type, body);
-        });
-      });
+      response.on('end', function(){callback(response, content, cookies);});
 
     }).on('error', function(e) {
       self.emit('critical',{
@@ -106,7 +100,34 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
     return false;
   }
   
-  fetch(self, target_url, endpoint);
+  var finalResponse = function (response, content) {
+      endpoint.go(
+        response.headers['content-type'] || '',
+        content || '',
+        function(content_type, body){
+          self.emit('complete', content_type, body);
+      });
+    };
+    
+  if(endpoint_def.env_seed){
+    fetch(self, endpoint_def.env_seed, function (response, content, seed_cookies) {
+      console.log("***************************");
+      console.log("Seeded remote request:");
+      /*
+      console.log(response);
+      console.log(content);
+      */
+      console.log(seed_cookies);
+      console.log("***************************");
+      fetch(self, target_url, finalResponse, 0, seed_cookies);
+    });
+  }
+  else
+  {
+    fetch(self, target_url,finalResponse);
+  }
+  
+  
 };
 
 

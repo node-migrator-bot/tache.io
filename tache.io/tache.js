@@ -176,11 +176,13 @@ exports.init = function(config_file, listen){
   
   //setup server
   
-  var server = connect()
+  var server = connect();
+  //would love to chain these all directly on, but need to have called the connect()
+  //constructor so redis-cache can bind to the server's end event
+  server
     .use(connect.logger())
     .use(connect.profiler())
-    .use(_prepare);
-  server    //would love to chain these all; this is a (rather iffy) hack so this redis cache instance can bind to the server's end evt.
+    .use(_prepare)
     .use(rediscache(config.cache, server))
     .use('/',_process);
     

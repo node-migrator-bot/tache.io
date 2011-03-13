@@ -10,7 +10,6 @@ var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
 var rediscache = require('./redis-cache'),
-    Endpoint = exports.Endpoint = require('./endpoint'),
     RequestProcessor = require('./request-processor'),
     util = require('./util');
 

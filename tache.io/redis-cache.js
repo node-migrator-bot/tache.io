@@ -4,13 +4,12 @@ var events = require('events'),
 var tache = require('./tache'),
     util = require('./util');
 
-var available = false, client;
 
 function RedisCache() {   //TODO: use config passed in
     events.EventEmitter.call(this);
     this.super = events.EventEmitter;
     
-    this.__defineGetter__('available',function() {return available;});
+    this.__defineGetter__('available',this.available);
     
     this.init();
 }
@@ -26,23 +25,20 @@ RedisCache.prototype = Object.create(events.EventEmitter.prototype, {
 RedisCache.prototype.init = function(){
   console.log('**** REDIS-CACHE INITALIZING***');
   console.log(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
-  
+    
   try {
-    client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
-  
-    client.on('connect',function() {
+    this.client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
+    
+    this.client.on('connect',function() {
       console.log('RC  |  Redis Cache is now available');
-      available = true;
     });
     
-    client.on('error',function(err) {
+    this.client.on('error',function(err) {
       console.log('RC  |  Error connecting to Redis server! ' + err.message);
-      available = false;
     });
   
-    client.on('end',function() {
+    this.client.on('end',function() {
       console.log('RC  |  Redis Cache is no longer connected!');
-      available = false;
     });
     
   }catch(e){
@@ -51,7 +47,7 @@ RedisCache.prototype.init = function(){
 }
 
 RedisCache.prototype.get = function(endpoint_name, url, done){
-  client.hgetall(this.key(endpoint_name, url),function (error, reply) {
+  this.client.hgetall(this.key(endpoint_name, url),function (error, reply) {
     console.log('-------Redis reply:--------', error, reply);
     if(!error && reply){
       //Validate redis record
@@ -75,6 +71,8 @@ RedisCache.prototype.store = function(endpoint_name, url, content_type, body, do
       function(error) { done(error); }
     );
   });
+RedisCache.prototype.available = function () {
+  return ((this.client && this.client.connected) || false);
 }
 
 RedisCache.prototype.key = function(endpoint_name, url) {
@@ -83,14 +81,17 @@ RedisCache.prototype.key = function(endpoint_name, url) {
 };
 
 RedisCache.prototype.close = function() {
-  client.quit();
-  //if the client hasn't quit fast enough, kill it.
-  setTimeout(function() {
-      try{
-        client.end();
-      }catch(e){}
-    },
-    util.interval('2s').seconds); //TODO: make this timeout configurable
+  if(this.client)
+  {
+    this.client.quit();
+    //if the client hasn't quit fast enough, kill it.
+    setTimeout(function() {
+        try{
+          this.client.end();
+        }catch(e){}
+      },
+      util.interval('2s').seconds); //TODO: make this timeout configurable
+  }
 };
 
 //The middleware function to be called with connectServer.use()
@@ -99,7 +100,7 @@ module.exports = exports = function(config, server) {
   //Spinup a redis client for this server instance
   var cache = new RedisCache(config);
   
-  server.on('close', cache.close);
+  server.on('close', function(){cache.close();});
   
   //define function for the 'bubble phase'
   function setupBubble(req, res, next){

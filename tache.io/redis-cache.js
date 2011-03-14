@@ -62,15 +62,17 @@ RedisCache.prototype.get = function(endpoint_name, url, done){
 
 RedisCache.prototype.store = function(endpoint_name, url, content_type, body, done){
   var key = this.key(endpoint_name, url);
-  client.hmset(key, {content_type:content_type, body:body},function(error){
-    client.expire(
+  this.client
+    .multi()
+    .hmset(key, {content_type:content_type, body:body})
+    .expire(
       key,
-      util.interval(
-        tache.Config.cache.redis.ttl || tache.Config.cache.ttl)
-      .seconds,
+      util.interval(tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds)
+    .exec(
       function(error) { done(error); }
     );
-  });
+}
+
 RedisCache.prototype.available = function () {
   return ((this.client && this.client.connected) || false);
 }

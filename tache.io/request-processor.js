@@ -24,19 +24,19 @@ RequestProcessor.prototype = Object.create(events.EventEmitter.prototype, {
 
 //'private' method to actually run requests
 var fetch = function(self, target_url, callback, redirects, cookies) {
-  console.log(">>>>>>>>>>>>>>>>>>> Fetching remote resource "+ target_url);
-  var redirects = redirects || 0,
+  var cookies = cookies || {},
+      redirects = redirects || 0,
       //parse URL, then rebuild in the form the HTTP[S].get() expects
       target    = url.parse(target_url),
       get_opts  = {
         host: (target.auth ? target.auth+'@'+target.hostname : target.hostname),
         port: target.port || 80,
         path: (target.pathname || "/") + (target.search || "") + (target.hash || ""),
-        headers:{
-          'Cookie':(cookies || "")
-        }
+        headers:{'Cookie':''}
       };
-
+      for(var cookie_name in cookies){
+        get_opts.headers.Cookie += cookie_name + "=" + cookies[cookie_name] + '; ';
+      }
   (target.protocol == 'https:'
     ?https
     :http).get(get_opts, function(response) {
@@ -50,10 +50,12 @@ var fetch = function(self, target_url, callback, redirects, cookies) {
           });
           return false;
         }else{
-          cookies = cookies || "";
           if(response.headers['set-cookie'])
           {
-            cookies += '; ' + response.headers['set-cookie'];
+            response.headers['set-cookie'].map(function(cookie){
+              cookie_kv = cookie.split(';')[0].split('=');
+              cookies[cookie_kv[0]] = cookie_kv[1];
+            });
           }
           return fetch(self, response.headers['location'], callback, ++redirects, cookies);
         }

@@ -11,7 +11,6 @@ var offlineOnly = (process.argv[3] == "offline");
 var responses = {
   bad_endpoint:"The required endpoint was not found or is unavailable\n"
 };
-
 module.exports = {
   "Unknown endpoint 404":function(){
     assert.response(server, {
@@ -41,17 +40,16 @@ module.exports = {
             });
         });
     
-    testServer.listen(3000);
+    testServer.listen(3001);
     
     assert.response(server, {
-      url:"/echo.noop/http://127.0.0.1:3000/",
+      url:"/echo.noop/http://127.0.0.1:3001/",
       headers:{'x-tache-nocache':'true'} //clear out the cache -- multiple frequent test runs agains the same redis sever will have some other value stored
     },{
       body:randomBodyContent
     });
   }
 }
-
 if(!offlineOnly){
   //add tests that depend on remote resources.
   
@@ -81,6 +79,17 @@ if(!offlineOnly){
       });
     });
     beforeExit(function(){assert.ok(done);});
+  };
+  
+  module.exports["Cookie-needing remote site seeded"] = function(){
+    assert.response(server, {
+      url:"/seed.asda/http://groceries.asda.com/asda-estore/search/searchlayout.jsp?searchString=bread&domainName=&pageConfiguration=8100012&fromContainer=yes&headerVersion=",
+      headers:{'x-tache-nocache':'true'} //clear out the cache -- multiple frequent test runs agains the same redis sever will have some other value stored
+    },function(res){
+      assert.includes(res.body, '<strong>bread</strong>');
+      assert.includes(res.body, '<div class="productsdisplay">');
+      assert.includes(res.body, '<div class="item"');
+    });
   };
 }
 

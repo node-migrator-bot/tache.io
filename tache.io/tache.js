@@ -110,10 +110,10 @@ var _process = function(request, response) { //No 'next' -- forces this to alway
 
 var _respond = function(response, status, reasonPhrase, content_type, body, after){
   response.writeHead(status, reasonPhrase || "", {
-    'Content-Length': body.length,
+    'Content-Length': Buffer.byteLength(body),
     'Content-Type': content_type });
-  response.write(body);
-  response.end();
+  response.end(body, 'utf-8');
+
   if (after) after();
 }
 

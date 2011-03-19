@@ -48,7 +48,7 @@ RedisCache.prototype.init = function(){
 
 RedisCache.prototype.get = function(endpoint_name, url, done){
   this.client.hgetall(this.key(endpoint_name, url),function (error, reply) {
-    console.log('-------Redis reply:--------', error, reply);
+    //console.log('-------Redis reply:--------', error, reply);
     if(!error && reply){
       //Validate redis record
       if(!(reply.content_type && reply.body)){
@@ -108,22 +108,25 @@ module.exports = exports = function(config, server) {
   function setupBubble(req, res, next){
     var _reply = req.reply;
 
-    req.reply = function(content_type, body) {
-      console.log("intercepting reply call");
-      //try to store in cache
-      if(cache && cache.available){
-        cache.store(this.endpoint,
-          this.target,
-          content_type,
-          body, function(error) {
-            console.log('Response from storing redis value: '+(error || 'Success!'));
-          }
-        );
-      }
-      console.log("Trying to call normal reply fn");
-      req.reply = _reply;
-      req.reply(content_type, body);
-    };
+    if(config.enabled)
+    {
+      req.reply = function(content_type, body) {
+        console.log("intercepting reply call");
+        //try to store in cache
+        if(cache && cache.available){
+          cache.store(this.endpoint,
+            this.target,
+            content_type,
+            body, function(error) {
+              console.log('Response from storing redis value: '+(error || 'Success!'));
+            }
+          );
+        }
+        console.log("Trying to call normal reply fn");
+        req.reply = _reply;
+        req.reply(content_type, body);
+      };
+    }
     next();
   };
   

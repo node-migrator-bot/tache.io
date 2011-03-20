@@ -23,22 +23,20 @@ RedisCache.prototype = Object.create(events.EventEmitter.prototype, {
 });
 
 RedisCache.prototype.init = function(){
-  console.log('**** REDIS-CACHE INITALIZING***');
-  console.log(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
     
   try {
     this.client = redis.createClient(tache.Config.cache.redis.port, tache.Config.cache.redis.host);
     
     this.client.on('connect',function() {
-      console.log('RC  |  Redis Cache is now available');
+      console.log('[Redis-Cache]  Redis Cache is now available');
     });
     
     this.client.on('error',function(err) {
-      console.log('RC  |  Error connecting to Redis server! ' + err.message);
+      console.log('[Redis-Cache]  Error connecting to Redis server! ' + err.message);
     });
   
     this.client.on('end',function() {
-      console.log('RC  |  Redis Cache is no longer connected!');
+      console.log('[Redis-Cache]  Redis Cache is no longer connected!');
     });
     
   }catch(e){
@@ -112,7 +110,6 @@ module.exports = exports = function(config, server) {
     function setupBubble(req, res, next){
       var _reply = req.reply;
       req.reply = function(content_type, body) {
-        console.log("intercepting reply call");
         //try to store in cache
         if(cache && cache.available){
           cache.store(this.endpoint,
@@ -123,7 +120,6 @@ module.exports = exports = function(config, server) {
             }
           );
         }
-        console.log("Trying to call normal reply fn");
         req.reply = _reply;
         req.reply(content_type, body);
       };

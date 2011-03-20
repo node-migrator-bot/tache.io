@@ -113,14 +113,6 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
     
   if(endpoint_def.env_seed){
     fetch(self, endpoint_def.env_seed, function (response, content, seed_cookies) {
-      console.log("***************************");
-      console.log("Seeded remote request:");
-      /*
-      console.log(response);
-      console.log(content);
-      */
-      console.log(seed_cookies);
-      console.log("***************************");
       fetch(self, target_url, finalResponse, 0, seed_cookies);
     });
   }

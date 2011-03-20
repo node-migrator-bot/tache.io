@@ -82,8 +82,6 @@ var _prepare = function(request, response, next){
       "Target URL not specified, or invalid",e);
   }
   
-  console.log('***' + endpoint_name + " | " + target_url + '***');
-  
   //Bind in the actual processing trigger, appropriate errors etc
   
   request.endpoint = endpoint_name;

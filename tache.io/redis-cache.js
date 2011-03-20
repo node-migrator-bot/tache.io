@@ -99,17 +99,18 @@ RedisCache.prototype.close = function() {
 //The middleware function to be called with connectServer.use()
 module.exports = exports = function(config, server) {
   
-  //Spinup a redis client for this server instance
-  var cache = new RedisCache(config);
+  if(config.enabled)
+  {
+    //Spinup a redis client for this server instance
+    var cache = new RedisCache(config);
   
-  server.on('close', function(){cache.close();});
+    server.on('close', function(){cache.close();});
   
-  //define function for the 'bubble phase'
-  function setupBubble(req, res, next){
-    var _reply = req.reply;
-
-    if(config.enabled)
-    {
+    //define function for the 'bubble phase'
+    //hook into the reply function of the response, then continue with
+    //the rest of the chain
+    function setupBubble(req, res, next){
+      var _reply = req.reply;
       req.reply = function(content_type, body) {
         console.log("intercepting reply call");
         //try to store in cache
@@ -126,30 +127,35 @@ module.exports = exports = function(config, server) {
         req.reply = _reply;
         req.reply(content_type, body);
       };
-    }
-    next();
-  };
+      next();
+    };
   
-  //return handler for the 'capture phase'
-  return function(req, res, next) {
+    //return handler for the 'capture phase'
+    return function(req, res, next) {
     
-    if(cache && cache.available //If there is a cache obj
-      && !req.headers['x-tache-nocache'] //and this request didn't ask to skip the cache
-      && req.endpoint && req.target)  // and this request has been preprocessed   //todo: when spinning off the cache to a separate project, this should just be a cacheKey property
-    {
-      //try to fetch from the cache
-      cache.get(req.endpoint, req.target, function(error, cacheItem) {
-        //no item returned means the cache didn't have it, proceed as usual
-        if (!cacheItem || cacheItem.expired){
-          setupBubble(req, res, next);
-        } else {
-          req.reply(cacheItem.content_type, cacheItem.body);
-        }
-      });
-    }
-    else
-    {
-      setupBubble(req, res, next);
-    }
-  };
+      if(cache && cache.available //If there is a cache obj
+        && !req.headers['x-tache-nocache'] //and this request didn't ask to skip the cache
+        && req.endpoint && req.target)  // and this request has been preprocessed   //todo: when spinning off the cache to a separate project, this should just be a cacheKey property
+      {
+        //try to fetch from the cache
+        cache.get(req.endpoint, req.target, function(error, cacheItem) {
+          if (!cacheItem || cacheItem.expired){
+            //not in cache; continue.
+            setupBubble(req, res, next);
+          } else {
+            //reply with the cached data, don't continue down
+            req.reply(cacheItem.content_type, cacheItem.body);
+          }
+        });
+      }
+      else
+      {
+        setupBubble(req, res, next);
+      }
+    };
+  }
+  else
+  {
+    return function(req, res, next) { next(); };
+  }
 };

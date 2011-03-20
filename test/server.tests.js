@@ -3,7 +3,7 @@ var http   = require('http'),
     //tache  = require("../coverage/"),
     assert = require('assert');
 
-var server = tache.init('test-config.json', false);
+var server = tache.init('tache-config.json', false);
 var offlineOnly = (process.argv[3] == "offline");
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key
@@ -43,8 +43,7 @@ module.exports = {
     testServer.listen(3001);
     
     assert.response(server, {
-      url:"/echo.noop/http://127.0.0.1:3001/",
-      headers:{'x-tache-nocache':'true'} //clear out the cache -- multiple frequent test runs agains the same redis sever will have some other value stored
+      url:"/echo.noop/http://127.0.0.1:3001/"
     },{
       body:randomBodyContent
     });

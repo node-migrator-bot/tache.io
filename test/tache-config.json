@@ -1,0 +1,9 @@
+{
+  "cache":{
+    "enabled":false
+  },
+  "paths":{
+    "endpoints":"./fixtures",
+    "transforms":"../transforms"
+  }
+}

@@ -106,8 +106,8 @@ RequestProcessor.prototype.init = function(endpoint_name, target_url){
       endpoint.go(
         response.headers['content-type'] || '',
         content || '',
-        function(content_type, body){
-          self.emit('complete', content_type, body);
+        function(content_type, body, ttl){
+          self.emit('complete', content_type, body, ttl);
       });
     };
     

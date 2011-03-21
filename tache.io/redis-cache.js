@@ -58,14 +58,15 @@ RedisCache.prototype.get = function(endpoint_name, url, done){
   });
 }
 
-RedisCache.prototype.store = function(endpoint_name, url, content_type, body, done){
+RedisCache.prototype.store = function(endpoint_name, url, content_type, ttl, body, done){
   var key = this.key(endpoint_name, url);
+  if (isNaN(ttl))
+    ttl = util.interval(ttl || tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds;
+  console.log("setting ttl to" + ttl);
   this.client
     .multi()
     .hmset(key, {content_type:content_type, body:body})
-    .expire(
-      key,
-      util.interval(tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds)
+    .expire(key, ttl)
     .exec(
       function(error) { done(error); }
     );
@@ -109,12 +110,13 @@ module.exports = exports = function(config, server) {
     //the rest of the chain
     function setupBubble(req, res, next){
       var _reply = req.reply;
-      req.reply = function(content_type, body) {
+      req.reply = function(content_type, body, ttl) {
         //try to store in cache
         if(cache && cache.available){
           cache.store(this.endpoint,
             this.target,
             content_type,
+            ttl,
             body, function(error) {
               console.log('Response from storing redis value: '+(error || 'Success!'));
             }

@@ -93,9 +93,9 @@ var _prepare = function(request, response, next){
 var _process = function(request, response) { //No 'next' -- forces this to always be the bottom of the stack (desireable?)
   var processor = new RequestProcessor();
 
-  processor.on("complete", function(content_type, body){
+  processor.on("complete", function(content_type, body, ttl){
     //reply to client with content
-    request.reply(content_type, body);
+    request.reply(content_type, body, ttl);
   });
 
   processor.on("critical", function(err){

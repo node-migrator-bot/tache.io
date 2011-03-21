@@ -26,12 +26,16 @@ Endpoint.prototype.go = function(incoming_content_type, target, after){
     this.run(incoming_content_type, target);
   });
   
-  this.on('done', function(result_content_type, result){
-    after(result_content_type, result);
+  this.on('done', function(result_content_type, result, ttl){
+    ttl = ttl || false;
+    after(result_content_type, result, ttl);
   })
   
   this.emit('run');
 }
+
+//convenience fn for emitting
+Endpoint.prototype.done = function(){}
 
 
 module.exports = exports = Endpoint;

@@ -1,6 +1,6 @@
-module.exports = function(content_type, data) {
+module.exports = function(res, headers, data) {
   var self = this;
   setTimeout(function(){
-    self.emit('done', content_type, data);
+    self.emit('done', headers, data);
   }, 1000);
 };

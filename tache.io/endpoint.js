@@ -18,24 +18,34 @@ Endpoint.prototype = Object.create(events.EventEmitter.prototype, {
   }
 });
 
-Endpoint.prototype.go = function(incoming_content_type, target, after){
+Endpoint.prototype.done = function(headers, body){
   
-  //rather than calling directly, let the runloop schedule it;
-  //trying to be deferential to incoming requests and block as little as possible.
-  this.on('run', function(){
-    this.run(incoming_content_type, target);
-  });
+  //no params?
+  if (!headers) this.response.fail(500,"Endpoint Error","Endpoint did not complete in a normal way");
   
-  this.on('done', function(result_content_type, result, ttl){
-    ttl = ttl || false;
-    after(result_content_type, result, ttl);
-  })
+  if (headers && !body){
+    body = headers;
+    headers = {};
+  }
   
-  this.emit('run');
-}
+  this.response.reply(headers, body);
+};
 
-//convenience fn for emitting
-Endpoint.prototype.done = function(){}
+Endpoint.prototype.go = function(response, orig_headers, orig_body){
+  
+  //store as an instance property to make setting up the convenience functions easier
+  this.response = response;
+  
+  //allow devs to emit 'done' event as well as calling self.done
+  this.on('done', this.done);
+  
+  var self = this;
+  
+  //rather than calling directly, schedule it for a future tick
+  process.nextTick(function(){
+    self.run(response, orig_headers, orig_body);
+  });
+}
 
 
 module.exports = exports = Endpoint;

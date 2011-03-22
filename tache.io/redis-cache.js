@@ -46,7 +46,7 @@ RedisCache.prototype.init = function(){
 
 RedisCache.prototype.get = function(endpoint_name, url, done){
   this.client.hgetall(this.key(endpoint_name, url),function (error, reply) {
-    //console.log('-------Redis reply:--------', error, reply);
+    console.log('-------Redis reply:--------', error, reply);
     if(!error && reply){
       //Validate redis record
       if(!(reply.content_type && reply.body)){
@@ -58,11 +58,12 @@ RedisCache.prototype.get = function(endpoint_name, url, done){
   });
 }
 
-RedisCache.prototype.store = function(endpoint_name, url, content_type, ttl, body, done){
+RedisCache.prototype.store = function(endpoint_name, url, content_type, body, ttl, done){
   var key = this.key(endpoint_name, url);
+  //console.log('-------Storing value:--------', body);
   if (isNaN(ttl))
     ttl = util.interval(ttl || tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds;
-  console.log("setting ttl to" + ttl);
+    
   this.client
     .multi()
     .hmset(key, {content_type:content_type, body:body})
@@ -109,21 +110,22 @@ module.exports = exports = function(config, server) {
     //hook into the reply function of the response, then continue with
     //the rest of the chain
     function setupBubble(req, res, next){
-      var _reply = req.reply;
-      req.reply = function(content_type, body, ttl) {
+      var _end = res.end;
+      res.end = function(body) {
         //try to store in cache
+        var ttl = res.ttl || false;
         if(cache && cache.available){
-          cache.store(this.endpoint,
-            this.target,
-            content_type,
+          cache.store(
+            req.endpoint, req.target,
+            req.headers, body,
             ttl,
-            body, function(error) {
+            function(error) {
               console.log('Response from storing redis value: '+(error || 'Success!'));
             }
           );
         }
-        req.reply = _reply;
-        req.reply(content_type, body);
+        res.end = _end;
+        res.end.apply(res, arguments);
       };
       next();
     };

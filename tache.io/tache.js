@@ -10,7 +10,6 @@ var check    = require('validator').check,
     sanitize = require('validator').sanitize;
 
 var rediscache = require('./redis-cache'),
-    RequestProcessor = require('./request-processor'),
     util = require('./util');
 
 var config = exports.Config = {},
@@ -36,12 +35,12 @@ var _prepare = function(request, response, next){
   
   //bind some functions in to context
   //TODO: set up a top-level response timeout just in case everything blows up?
-  request.fail  = function(status,reason,msg,exception){
+  request.fail  = response.fail = function(status,reason,msg,exception){
     _respond(response,status,reason,'text-plain',msg+'\n',function(){
       console.log("Rejecting request to " + request.url + ' : ' + msg);
       //if(exception) console.log('Request failed due to error:\n'+ exception.stack);
     });};
-  request.reply = function(content_type,body, after){
+  request.reply = response.reply = function(content_type, body, after){
     _respond(response,200,"OK",content_type, body, after);
   };
   
@@ -88,22 +87,6 @@ var _prepare = function(request, response, next){
   request.target = target_url;
   
   next();
-};
-
-var _process = function(request, response) { //No 'next' -- forces this to always be the bottom of the stack (desireable?)
-  var processor = new RequestProcessor();
-
-  processor.on("complete", function(content_type, body, ttl){
-    //reply to client with content
-    request.reply(content_type, body, ttl);
-  });
-
-  processor.on("critical", function(err){
-    return request.fail(err.status, err.reason, err.msg, err.thrown);
-  });
-  
-  processor.init(request.endpoint, request.target);
-  
 };
 
 var _respond = function(response, status, reasonPhrase, content_type, body, after){
@@ -181,7 +164,7 @@ exports.init = function(config_file, listen){
     .use(connect.profiler())
     .use(_prepare)
     .use(rediscache(config.cache, server))
-    .use('/',_process);
+    .use('/',require('./request-processor')(config));
     
   if(listen){
     server.listen(

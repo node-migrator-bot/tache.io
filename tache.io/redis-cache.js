@@ -107,17 +107,21 @@ module.exports = exports = function(config, server) {
     server.on('close', function(){cache.close();});
   
     //define function for the 'bubble phase'
-    //hook into the reply function of the response, then continue with
+    //hook into the relevant response functions, then run
     //the rest of the chain
     function setupBubble(req, res, next){
+      
+      // Hook end fn -- read body
+      //TODO: this will fail horribly for buffered responses!
       var _end = res.end;
       res.end = function(body) {
+        
         //try to store in cache
         var ttl = res.ttl || false;
         if(cache && cache.available){
           cache.store(
             req.endpoint, req.target,
-            req.headers, body,
+            (res._headers || {}), body,
             ttl,
             function(error) {
               console.log('Response from storing redis value: '+(error || 'Success!'));

@@ -40,8 +40,8 @@ var _prepare = function(request, response, next){
       console.log("Rejecting request to " + request.url + ' : ' + msg);
       //if(exception) console.log('Request failed due to error:\n'+ exception.stack);
     });};
-  request.reply = response.reply = function(content_type, body, after){
-    _respond(response,200,"OK",content_type, body, after);
+  request.reply = response.reply = function(headers, body, after){
+    _respond(response,200,"OK",headers, body, after);
   };
   
   //break request URI at the slash between the endpoint name and a URI protocol.
@@ -89,10 +89,9 @@ var _prepare = function(request, response, next){
   next();
 };
 
-var _respond = function(response, status, reasonPhrase, content_type, body, after){
-  response.writeHead(status, reasonPhrase || "", {
-    'Content-Length': Buffer.byteLength(body),
-    'Content-Type': content_type });
+var _respond = function(response, status, reasonPhrase, headers, body, after){
+  headers['Content-Length'] = Buffer.byteLength(body);
+  response.writeHead(status, headers);
   response.end(body, 'utf-8');
 
   if (after) after();

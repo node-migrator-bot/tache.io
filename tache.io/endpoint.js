@@ -18,7 +18,7 @@ Endpoint.prototype = Object.create(events.EventEmitter.prototype, {
   }
 });
 
-Endpoint.prototype.done = function(headers, body){
+Endpoint.prototype.done = Endpoint.prototype.reply = function(headers, body){
   
   //no params?
   if (!headers) this.response.fail(500,"Endpoint Error","Endpoint did not complete in a normal way");

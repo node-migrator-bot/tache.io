@@ -27,6 +27,11 @@ Endpoint.prototype.done = function(headers, body){
     body = headers;
     headers = {};
   }
+  //Set content-type from the magic properties
+  ["mime", "type"].map(function(i){
+    if(this.response[i]) this.response.setHeader('Content-Type', this.response.[i]);
+  });
+  
   
   this.response.reply(headers, body);
 };

@@ -46,27 +46,29 @@ RedisCache.prototype.init = function(){
 
 RedisCache.prototype.get = function(endpoint_name, url, done){
   this.client.hgetall(this.key(endpoint_name, url),function (error, reply) {
-    console.log('-------Redis reply:--------', error, reply);
     if(!error && reply){
       //Validate redis record
-      if(!(reply.content_type && reply.body)){
+      //TODO: validate some key headers?
+      if(!(reply.__body)){
         //todo: emit error/log something
-        return done(error);
+        return done(new Error('Empy reply from redis-cache'));
       }
       return done(false, reply);
     }
   });
 }
 
-RedisCache.prototype.store = function(endpoint_name, url, content_type, body, ttl, done){
+RedisCache.prototype.store = function(endpoint_name, url, headers, body, ttl, done){
   var key = this.key(endpoint_name, url);
-  //console.log('-------Storing value:--------', body);
   if (isNaN(ttl))
     ttl = util.interval(ttl || tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds;
-    
+  
+  //tack the body on to the headers hash (bit fugly, but functional and faaster than messing around)
+  headers.__body = body;
+  
   this.client
     .multi()
-    .hmset(key, {content_type:content_type, body:body})
+    .hmset(key, headers)
     .expire(key, ttl)
     .exec(
       function(error) { done(error); }
@@ -143,12 +145,14 @@ module.exports = exports = function(config, server) {
       {
         //try to fetch from the cache
         cache.get(req.endpoint, req.target, function(error, cacheItem) {
-          if (!cacheItem || cacheItem.expired){
+          if (!cacheItem){
             //not in cache; continue.
             setupBubble(req, res, next);
           } else {
             //reply with the cached data, don't continue down
-            req.reply(cacheItem.content_type, cacheItem.body);
+            var body = cacheItem.__body;
+            delete cacheItem.__body;
+            req.reply(cacheItem, body);
           }
         });
       }

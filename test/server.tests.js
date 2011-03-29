@@ -51,7 +51,7 @@ module.exports = {
   
   "Broken endpoint 404":function(){
     assert.response(server, {
-      url:"/broken.endpoint/http://www.example.com"
+      url:"/broken/http://www.example.com"
     },{
       body:responses.bad_endpoint
     });

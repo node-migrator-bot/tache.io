@@ -4,7 +4,7 @@ var http   = require('http'),
     assert = require('assert');
 
 var server = tache.init('tache-config.json', false);
-var offlineOnly = (process.argv[3] == "offline");
+var offlineOnly = (process.argv[2] == "offline");
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key
 // (like an internationalization file). Would avoid having to duplicate them exactly here.
@@ -12,12 +12,41 @@ var responses = {
   bad_endpoint:"The required endpoint was not found or is unavailable\n"
 };
 module.exports = {
-  "Unknown endpoint 404":function(){
-    assert.response(server, {
-      url:"/qwertyuiop/asdfghjkl/http://www.example.com"
-    },{
-      body:responses.bad_endpoint
+  "Unknown endpoints 404":function(beforeExit){
+    var done = 0;
+    var endpoints = ['a',
+    'a/b',
+    'a/b/c/d',
+    'a/b/c.d',
+    'a.b'];
+    
+    endpoints.forEach(function(endpoint){
+      assert.response(server,
+        { url:'/' + endpoint + "/http://www.example.com"},
+        { body:responses.bad_endpoint },
+        function(){ done++; }
+      );
     });
+    
+    beforeExit(function() {assert.equal(done, endpoints.length);});
+  },
+
+  "Bad endpoint names rejected":function(beforeExit){
+    var done = 0;
+    var endpoints = ['a.b/c',
+    'a.b.c',
+    'a-b-c',
+    'a..b'];
+    
+    endpoints.forEach(function(endpoint){
+      assert.response(server,
+        { url:'/' + endpoint + "/http://www.example.com"},
+        { status:501 },
+        function(){ done++; }
+      );
+    });
+    
+    beforeExit(function() {assert.equal(done, endpoints.length);});
   },
   
   "Broken endpoint 404":function(){
@@ -27,6 +56,7 @@ module.exports = {
       body:responses.bad_endpoint
     });
   },
+  
   "No-op echoes content": function(){
     //spool up a hello world server
     var randomBodyContent = (Math.random() * 100000) + '\n',

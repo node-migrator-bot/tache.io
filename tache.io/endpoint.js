@@ -1,13 +1,10 @@
 var assert = require('assert'),
-    util   = require('util'),
+    util   = require('./util');
     events = require('events');
 
-function Endpoint(runFn) {
+function Endpoint() {
     events.EventEmitter.call(this);
     this.super = events.EventEmitter;
-    
-    assert.equal(typeof runFn,'function');
-    this.run = runFn;
 }
 
 Endpoint.super_ = events.EventEmitter;
@@ -17,6 +14,19 @@ Endpoint.prototype = Object.create(events.EventEmitter.prototype, {
     enumerable: false
   }
 });
+
+Endpoint.factory = function(obj, response) {
+  var endpoint = new Endpoint();
+  util.merge(endpoint,obj);
+  
+  endpoint.response = response;
+  //allow devs to emit 'done' event as well as calling self.done
+  endpoint.on('done', endpoint.done);
+  
+  endpoint.expects = endpoint.expects || 'utf8';
+  endpoint.emits = endpoint.emits || 'utf8';
+  return endpoint;
+};
 
 Endpoint.prototype.done = Endpoint.prototype.reply = function(headers, body){
   
@@ -32,25 +42,9 @@ Endpoint.prototype.done = Endpoint.prototype.reply = function(headers, body){
     if(this.response && this.response[i]) this.response.setHeader('Content-Type', this.response[i]);
   }, this);
   
+  if(this.emits) this.response.encoding = this.emits;
   
   this.response.reply(headers, body);
 };
-
-Endpoint.prototype.go = function(response, orig_headers, orig_body){
-  
-  //store as an instance property to make setting up the convenience functions easier
-  this.response = response;
-  
-  //allow devs to emit 'done' event as well as calling self.done
-  this.on('done', this.done);
-  
-  var self = this;
-  
-  //rather than calling directly, schedule it for a future tick
-  process.nextTick(function(){
-    self.run(response, orig_headers, orig_body);
-  });
-}
-
 
 module.exports = exports = Endpoint;

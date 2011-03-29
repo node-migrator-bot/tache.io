@@ -1,6 +1,6 @@
 var jsdom = require('jsdom');
 
-module.exports = function(res, headers, data) {
+module.exports.tojson = function(headers, data) {
   var self = this;
   
   var products = new Array();
@@ -19,8 +19,8 @@ module.exports = function(res, headers, data) {
         name: $('li.productname application ', this).first().text()
         });
     });
-    res.type = 'application/json';
-    res.ttl = "2h";
+    this.response.type = 'application/json';
+    this.response.ttl = "2h";
     self.emit('done', JSON.stringify(products));
   });
 };

@@ -24,7 +24,7 @@ Fetcher.prototype = Object.create(events.EventEmitter.prototype, {
 });
 
 //'private' method to actually run requests
-Fetcher.prototype.fetch = function(self, target_url, callback, redirects, cookies) {
+Fetcher.prototype.fetch = function(self, target_url, callback, encoding, redirects, cookies) {
   var cookies   = cookies || {},
       redirects = redirects || 0,
       //parse URL, then rebuild in the form the HTTP[S].get() expects
@@ -58,12 +58,12 @@ Fetcher.prototype.fetch = function(self, target_url, callback, redirects, cookie
               cookies[cookie_kv[0]] = cookie_kv[1];
             });
           }
-          return self.fetch(self, remote.headers['location'], callback, ++redirects, cookies);
+          return self.fetch(self, remote.headers['location'], callback, encoding, ++redirects, cookies);
         }
       }
 
       //TODO: support non-UTF8: want untouched binary streams for things like images.
-      remote.setEncoding(encoding='utf8');
+      remote.setEncoding(encoding);
       var content = "";
 
       remote.on('data', function (chunk) {
@@ -82,11 +82,14 @@ Fetcher.prototype.fetch = function(self, target_url, callback, redirects, cookie
 module.exports = exports = function(config) {
   
   return function(req, res){
-  
     try{
-      var endpoint_def = require(config.paths.endpoints + req.endpoint),
-          endpoint     = new Endpoint(endpoint_def);
-      assert.equal(typeof endpoint.go,'function');
+      var parts        = req.endpoint.split('.'),
+          path         = parts[0],
+          func         = parts[1] || 'do',
+          endpoint_def = require(config.paths.endpoints + path),
+          endpoint     = Endpoint.factory(endpoint_def, res);
+          
+      assert.equal(typeof endpoint[func],'function');
     } catch(e)
     {
       req.fail(404, "Endpoint not available", "The required endpoint was not found or is unavailable",e);
@@ -96,21 +99,21 @@ module.exports = exports = function(config) {
     var fetcher = new Fetcher();
     
     fetcher.on('error',function(err) {
-      request.fail.apply(request, err);
+      req.fail.apply(req, err);
     });
     
     var fetched = function(remoteResponse, content){
-      endpoint.go(res, remoteResponse.headers, content);
+      endpoint[func](remoteResponse.headers, content);
     }
     
-    if(endpoint_def.env_seed){
-      fetcher.fetch(fetcher, endpoint_def.env_seed, function (response, content, seed_cookies) {
-        fetcher.fetch(fetcher, req.target, fetched, 0, seed_cookies);
-      });
+    if(endpoint.env_seed){
+      fetcher.fetch(fetcher, endpoint.env_seed, function (response, content, seed_cookies) {
+        fetcher.fetch(fetcher, req.target, fetched, endpoint.expects, 0, seed_cookies);
+      }, endpoint.expects);
     }
     else
     {
-      fetcher.fetch(fetcher, req.target, fetched);
+      fetcher.fetch(fetcher, req.target, fetched, endpoint.expects);
     }
   
   };

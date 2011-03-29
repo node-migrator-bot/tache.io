@@ -62,16 +62,16 @@ var _prepare = function(request, response, next){
       .replace(/\/+/,'/');  //remove multiple instances of slashes
   var target_url = sanitize(uri_parts[1])
       .ltrim('/')
+      
   
   //TODO: if no url, treat requests like 
   //a HEAD request to the endpoint and return meta info
   try {
-    check(endpoint_name).regex(/(?:\w[\/\.]){1,}\w+/); //ensure enpoint is of the form foo.bar, foo/bar, foo.bar/bar/foo etc
+    check(endpoint_name).regex(/^(\w+\/)*(\w+\.)?\w+$/); //ensure enpoint is of the form foo, foo.bar, foo/bar.baz, foo/bar/baz.quux etc
   } catch (e) {
     return request.fail(501, "Not Supported",
       "Invalid endpoint name form",e);
   }
-  
   //if no URI specified (could happen with direct requests to root and an endpoint header)
   //TODO: node-validator only accepts http, https, ftp. Do i need to support more?
   try {
@@ -90,9 +90,9 @@ var _prepare = function(request, response, next){
 };
 
 var _respond = function(response, status, reasonPhrase, headers, body, after){
-  headers['Content-Length'] = Buffer.byteLength(body);
+  headers['Content-Length'] = Buffer.byteLength(body, response.encoding);
   response.writeHead(status, headers);
-  response.end(body, 'utf-8');
+  response.end(body,response.encoding);
 
   if (after) after();
 }

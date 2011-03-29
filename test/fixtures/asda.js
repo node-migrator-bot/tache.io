@@ -19,8 +19,8 @@ module.exports.tojson = function(headers, data) {
         name: $('li.productname application ', this).first().text()
         });
     });
-    this.response.type = 'application/json';
-    this.response.ttl = "2h";
+    self.response.type = 'application/json';
+    self.response.ttl = "2h";
     self.emit('done', JSON.stringify(products));
   });
 };

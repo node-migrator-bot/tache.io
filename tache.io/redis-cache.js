@@ -63,7 +63,7 @@ RedisCache.prototype.store = function(endpoint_name, url, headers, body, ttl, do
   if (isNaN(ttl))
     ttl = util.interval(ttl || tache.Config.cache.redis.ttl || tache.Config.cache.ttl).seconds;
   
-  //tack the body on to the headers hash (bit fugly, but functional and faaster than messing around)
+  //tack the body on to the headers hash (bit fugly, but functional and faster than messing around)
   headers.__body = body;
   
   this.client

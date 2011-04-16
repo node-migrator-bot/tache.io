@@ -8,4 +8,12 @@ as an example of a minimal script to get tache running.
 
 var tache = require("tache.io");
 
-tache.init(process.argv[2]);
+tache.init({
+  "cache":{
+    "ttl":"1m",
+    "redis":{
+      "host":"127.0.0.1",
+      "port":"6379"
+    }
+  }
+});

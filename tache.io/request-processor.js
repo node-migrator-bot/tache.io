@@ -86,7 +86,7 @@ module.exports = exports = function(config) {
       var parts        = req.endpoint.split('.'),
           path         = parts[0],
           func         = parts[1] || 'do',
-          endpoint_def = require(config.paths.endpoints + path),
+          endpoint_def = require(path),
           endpoint     = Endpoint.factory(endpoint_def, res);
           
       assert.equal(typeof endpoint[func],'function');

@@ -14,11 +14,6 @@ var rediscache = require('./redis-cache'),
 
 var config = exports.Config = {},
     defaults = {
-      paths:{
-        endpoints:'endpoints/',
-        transforms:'transforms/'
-        
-      },
       port:8000,
       cache:{
         enabled:true,
@@ -98,7 +93,9 @@ var _respond = function(response, status, reasonPhrase, headers, body, after){
 }
 
 //TODO: allow direct invocation without a bootstrap script, reading paths from argv / env variables?
-exports.init = function(config_file, listen){
+exports.init = function(config, listen){
+  
+  var config_file = (typeof config == 'string') ? config: null;
   
   // flag to indicate whether the server should bind to a [host and] port.
   // 99% of the time this will be true -- the major exception is running tests,
@@ -106,41 +103,32 @@ exports.init = function(config_file, listen){
   
   if (listen !== false) listen = true;
   
-  //Read config
-  //find the path of the file that invoked us.
-  //TODO: support repl?
-  var basepath = path.dirname(module.parent.filename) + '/';
-  try
+  if(config_file)
   {
-    config_path = util.resolve(basepath, config_file, 'tache-config.json',util.RESOLVE_FILES_ONLY);
-  }catch(e){
-    throw new Error("Unable to start Tache.io: No config file: " + e.message);
-  }
+    //Read config
+    //find the path of the file that invoked us.
+    //TODO: support repl?
+    var basepath = path.dirname(module.parent.filename) + '/';
+    
+    try
+    {
+      config_path = util.resolve(basepath, config_file, 'tache-config.json',util.RESOLVE_FILES_ONLY);
+    }catch(e){
+      throw new Error("Unable to start Tache.io: No config file: " + e.message);
+    }
   
-  console.log('Using config file '+ config_path + ':');
+    console.log('Using config file '+ config_path + ':');
   
-  try{
-    config = JSON.parse(fs.readFileSync(config_path, "utf8"));
-  }catch(e){
-    throw new Error("Unable to load config file: Check for JSON structural issues, e.g. fully double-quoted keys etc?\n\t"+e.message);
+    try{
+      config = JSON.parse(fs.readFileSync(config_path, "utf8"));
+    }catch(e){
+      throw new Error("Unable to load config file: Check for JSON structural issues, e.g. fully double-quoted keys etc?\n\t"+e.message);
+    }
   }
   //TODO: Nice idea: watch config file for changes and dynamically reload?
   
   //establish defaults:
   util.merge(config, defaults);
-  
-  //Rewrite the basedir to be where the config file is. That's probably a more intuitive
-  //location to look for endpoint classes, transform functions than the bootstrapper
-  basepath = path.dirname(config_path) + '/';
-  
-  //Establish endpoint and tranform dirs
-  try{
-    ['endpoints','transforms'].forEach(function(item){
-      config.paths[item] = util.resolve(basepath, config.paths[item], item+'/', util.RESOLVE_DIRS_ONLY) + '/';
-    });
-  }catch(e){
-    throw new Error("Unable to find endpoint/tranform directories, please check your config\n\t"+e.message);
-  }
   
   console.log("Full runtime config is: " + util.inspect(config)+"\n");
   
@@ -149,9 +137,6 @@ exports.init = function(config_file, listen){
   
   //use auth or not?
   //logging?
-  //locations of endpoint code?
-      //endpoint location path retrieved from env, or config file etc.
-  
   
   //setup server
   

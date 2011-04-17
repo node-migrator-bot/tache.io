@@ -70,10 +70,12 @@ Fetcher.prototype._fetch = function(target_url, evt) {
   var target   = url.parse(target_url),
       get_opts = {
         host: (target.auth ? target.auth+'@'+target.hostname : target.hostname),
-        port: target.port || 80,
         path: (target.pathname || "/") + (target.search || "") + (target.hash || ""),
         headers:{'Cookie':''}
       };
+  if (target.port){
+    get_opts.port = target.port;
+  }
   for (var cookie_name in self.cookies){
     get_opts.headers.Cookie += cookie_name + "=" + self.cookies[cookie_name] + '; ';
   }

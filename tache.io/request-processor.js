@@ -9,9 +9,29 @@ var Endpoint = require('./endpoint');
 
 var MAX_REDIRECTS = 20;
 
-function Fetcher() {
+function Fetcher(seed_url, encoding) {
     events.EventEmitter.call(this);
-    this.super = events.EventEmitter;
+    
+    this.super     = events.EventEmitter;
+    this.cookies   = {};
+    this.redirects = 0;
+    this.encoding  = encoding || 'utf8';
+    this.seeding   = false;
+    this.queued    = [];
+    
+    //prepare the envirnoment with an initial request.
+    //swallow any errors, don't want a bad seed URL to completely kill things
+    if (seed_url){
+      try {
+        this.seeding = true;
+        this._fetch(seed_url, 'seeded');
+      }
+      catch (err) {
+        // log to console, but that's it.
+        console.log("WARNING: Seeding remote request with '" + seed_url + "' threw an error, continuing anyway.  Error:" + err.message);
+        this.emit('seeded');
+      }
+    }
 }
 
 Fetcher.super_ = events.EventEmitter;
@@ -23,58 +43,83 @@ Fetcher.prototype = Object.create(events.EventEmitter.prototype, {
   }
 });
 
+
+Fetcher.prototype.fetch = function(target_url, callback) {
+
+
+  var self = this,
+      run = function() {
+        self.seeding = false;
+        self.redirects = 0;
+        self._fetch(target_url, 'fetched');
+      };
+  //if we're in the process of seeding, let it finish first
+  if(this.seeding === true){
+    self.on('seeded', run);
+  } else {
+    run();
+  }
+  
+  this.on('fetched', callback );
+}
+
 //'private' method to actually run requests
-Fetcher.prototype.fetch = function(self, target_url, callback, encoding, redirects, cookies) {
-  var cookies   = cookies || {},
-      redirects = redirects || 0,
+Fetcher.prototype._fetch = function(target_url, evt) {
+  var self = self || this;
       //parse URL, then rebuild in the form the HTTP[S].get() expects
-      target    = url.parse(target_url),
-      get_opts  = {
+  var target   = url.parse(target_url),
+      get_opts = {
         host: (target.auth ? target.auth+'@'+target.hostname : target.hostname),
         port: target.port || 80,
         path: (target.pathname || "/") + (target.search || "") + (target.hash || ""),
         headers:{'Cookie':''}
       };
-      for(var cookie_name in cookies){
-        get_opts.headers.Cookie += cookie_name + "=" + cookies[cookie_name] + '; ';
-      }
+  for (var cookie_name in self.cookies){
+    get_opts.headers.Cookie += cookie_name + "=" + self.cookies[cookie_name] + '; ';
+  }
+  
   (target.protocol == 'https:'
     ?https
     :http).get(get_opts, function(remote) {
       
-      //Deal with response headers; redirects, cookies etc
-      if(remote.statusCode >=300 && remote.statusCode < 400 && remote.headers['location']){
+      //if we're being told to redirect, deal with response cookie headers etc then redirect
+      if (remote.statusCode >=300 && remote.statusCode < 400 && remote.headers['location']){
         //redirect to given location
-        if(redirects > MAX_REDIRECTS){
+        if (self.redirects > MAX_REDIRECTS){
           self.emit('error',
             //TODO: is 502 the most appropriate response code for too many redirects? Maybe 504 (Gateway Timeout)?
             [ 502, "Too many redirects", "The remote resource caused too many redirects (" + MAX_REDIRECTS + ")"]);
           return false;
-        }else{
-          if(remote.headers['set-cookie'])
+        } else {
+          if (remote.headers['set-cookie'])
           {
             remote.headers['set-cookie'].map(function(cookie){
               cookie_kv = cookie.split(';')[0].split('=');
-              cookies[cookie_kv[0]] = cookie_kv[1];
+              self.cookies[cookie_kv[0]] = cookie_kv[1];
             });
           }
-          return self.fetch(self, remote.headers['location'], callback, encoding, ++redirects, cookies);
+          self.redirects++;
+          return self._fetch(remote.headers['location'], evt);
         }
       }
-
-      //TODO: support non-UTF8: want untouched binary streams for things like images.
-      remote.setEncoding(encoding);
-      var content = "";
-
-      remote.on('data', function (chunk) {
-        content += chunk;
-      });
-
-      remote.on('end', function(){callback(remote, content, cookies);});
-
+      
+      //slight shortcut: if seeding and done with redirects, skip the body, just emit
+      if (self.seeding) {
+        self.emit(evt);
+      }
+      else
+      {
+        remote.setEncoding(self.encoding);
+        var content = "";
+        
+        remote.on('data', function (chunk) {
+          content += chunk;
+        });
+        
+        remote.on('end', function(){self.emit(evt, remote.headers, content, self.cookies);});
+      }
     }).on('error', function(e) {
       self.emit('error',[ 404, "Remote error", "Couldn't fetch the remote resource", e]);
-      return false;
     });
 }
 
@@ -96,25 +141,13 @@ module.exports = exports = function(config) {
       return false;
     }
     
-    var fetcher = new Fetcher();
+    var fetcher = new Fetcher(endpoint.env_seed || false, endpoint.expects || false);
     
     fetcher.on('error',function(err) {
       req.fail.apply(req, err);
     });
     
-    var fetched = function(remoteResponse, content){
-      endpoint[func](remoteResponse.headers, content);
-    }
-    
-    if(endpoint.env_seed){
-      fetcher.fetch(fetcher, endpoint.env_seed, function (response, content, seed_cookies) {
-        fetcher.fetch(fetcher, req.target, fetched, endpoint.expects, 0, seed_cookies);
-      }, endpoint.expects);
-    }
-    else
-    {
-      fetcher.fetch(fetcher, req.target, fetched, endpoint.expects);
-    }
+    fetcher.fetch(req.target, function(headers, content){endpoint[func](headers, content);});
   
   };
 };

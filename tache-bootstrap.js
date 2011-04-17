@@ -7,7 +7,7 @@ as an example of a minimal script to get tache running.
 
 var tache = require("tache.io");
 
-tache.init({
+tache.init(process.argv[2] || {
   "cache":{
     "ttl":"1m",
     "redis":{

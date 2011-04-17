@@ -62,7 +62,7 @@ var _prepare = function(request, response, next){
   //TODO: if no url, treat requests like 
   //a HEAD request to the endpoint and return meta info
   try {
-    check(endpoint_name).regex(/^(\w+\/)*(\w+\.)?\w+$/); //ensure enpoint is of the form foo, foo.bar, foo/bar.baz, foo/bar/baz.quux etc
+    check(endpoint_name).regex(/^([\w-_]+\/)*([\w-_]+\.)?[\w-_]+$/); //ensure enpoint is of the form foo, foo.bar, foo/bar.baz, foo/bar/baz.quux etc
   } catch (e) {
     return request.fail(501, "Not Supported",
       "Invalid endpoint name form",e);

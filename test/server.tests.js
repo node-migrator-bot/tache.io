@@ -11,6 +11,7 @@ var offlineOnly = (process.argv[2] == "offline");
 var responses = {
   bad_endpoint:"The required endpoint was not found or is unavailable\n"
 };
+
 module.exports = {
   "Unknown endpoints 404":function(beforeExit){
     var done = 0;
@@ -18,6 +19,9 @@ module.exports = {
     'a/b',
     'a/b/c/d',
     'a/b/c.d',
+    'a-b-c',
+    'a_b_c',
+    'a-b-c.d',
     'a.b'];
     
     endpoints.forEach(function(endpoint){
@@ -35,7 +39,6 @@ module.exports = {
     var done = 0;
     var endpoints = ['a.b/c',
     'a.b.c',
-    'a-b-c',
     'a..b'];
     
     endpoints.forEach(function(endpoint){

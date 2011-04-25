@@ -1,0 +1,165 @@
+@import "reset"
+
+p = '/'
+fp = p+'assets/copse/'
+
+gridsize = 18
+
+/*
+bg = #443340
+fg = #c8c7d1
+hg = #af9381
+*/
+
+bg = #fefbfe
+fg = #44444f
+hg = #af9381
+
+grid(n=1)
+  unit( (gridsize * n), 'px')
+  
+page_w = grid(48)
+
+logo_w = 158
+logo_h = 67
+
+hr_w = 320
+hr_h = 12
+
+title_offset = grid(ceil(logo_w / gridsize ) + 1)
+
+footer_h = grid(4)
+header_offset = grid(2)
+
+//-----------
+//typographic setups
+//-----------
+
+font-code     = Menlo, "Andale Mono", Monaco, "Lucida Console", "DejaVu Sans Mono", monospace
+font-standard = Helvetica, Arial, "Bitstream Vera Sans", sans-serif
+font-heading  = 'CopseRegular', Arial, sans-serif
+
+@font-face {
+  font-family: 'CopseRegular';
+  src: url(fp+'Copse-Regular-webfont.eot');
+  src: url(fp+'Copse-Regular-webfont.eot?#iefix') format('eot'), url(fp+'Copse-Regular-webfont.woff') format('woff'), url(fp+'Copse-Regular-webfont.ttf') format('truetype'), url(fp+'Copse-Regular-webfont.svg#webfont2ZLDIqTa') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+font(type, size=false)
+  font-family lookup('font-' + type)
+  if size is defined and size is not false
+    font-size grid(size)
+    line-height grid(ceil(size))
+
+
+//-----------
+//general utilities
+//-----------
+
+vendor(prop, args)
+  -webkit-{prop} args
+  -moz-{prop} args
+  {prop} args
+
+border-radius()
+  vendor('border-radius', arguments)
+
+
+//-----------
+//Top-level structural stuffs
+//-----------
+
+
+html, body
+  height 100%
+  margin 0
+
+body
+  font standard .77777777
+  background-color bg
+  color fg
+
+.grid
+  margin 0 auto
+  width page_w
+  position relative
+
+.grid>*
+  padding-top grid(0.5)
+  padding-bottom grid(0.5)
+
+.grid>.grid
+  padding-top 0
+  padding-bottom 0
+
+#header
+  padding-top header_offset
+
+#container
+  min-height 100%
+  height auto !important
+  height 100%
+  margin-bottom footer_h * -1
+
+#footer, #wedge
+  height footer_h
+  clear both
+
+#footer>*
+  padding 0
+  font standard 0.6
+
+/*
+li:before
+  content '\2013 \0020'
+  */
+
+p, ul, ol
+  letter-spacing 0.004em
+
+ul, ol
+  list-style-type disc
+  margin-left 1em
+
+pre
+  font code 0.66666666
+  background-color rgba(desaturate(lighten(hg, 25%), 0%), 0.8)
+  //background-color hg
+  border-radius grid(0.5)
+  padding grid(0.5) grid(0.5)
+
+h1
+  font heading 2
+
+h2
+  font heading 1.2
+
+li>ul
+  margin-left: 4em
+
+#title
+  font heading 3
+  background url(p+'assets/tache.png') (title_offset/2)-(logo_w/2) (grid(3)/2)+grid(0.5)-(logo_h/2)  no-repeat
+  padding-left unit(title_offset,'px')
+
+h1, h2, h3, h4
+  color hg
+  & a
+    text-decoration: none
+
+a
+  color hg
+
+hr
+  background url(p+'assets/hr.png') center center no-repeat
+  height grid(2)
+  
+ins
+  font-style italic
+  text-decoration: none
+  &:before
+    content '['
+  &:after
+    content ']'

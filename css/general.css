@@ -1,0 +1,242 @@
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+body {
+  line-height: 1;
+}
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+del {
+  text-decoration: line-through;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+@font-face {
+  font-family: "CopseRegular";
+  src: url("/assets/copse/Copse-Regular-webfont.eot");
+  src: url("/assets/copse/Copse-Regular-webfont.eot?#iefix") format("eot"), url("/assets/copse/Copse-Regular-webfont.woff") format("woff"), url("/assets/copse/Copse-Regular-webfont.ttf") format("truetype"), url("/assets/copse/Copse-Regular-webfont.svg#webfont2ZLDIqTa") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: Helvetica, Arial, "Bitstream Vera Sans", sans-serif;
+  font-size: 13.99999986px;
+  line-height: 18px;
+  background-color: #fefbfe;
+  color: #44444f;
+}
+.grid {
+  margin: 0 auto;
+  width: 864px;
+  position: relative;
+}
+.grid>* {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.grid>.grid {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+#header {
+  padding-top: 36px;
+}
+#container {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin-bottom: -72px;
+}
+#footer,
+#wedge {
+  height: 72px;
+  clear: both;
+}
+#footer>* {
+  padding: 0;
+  font-family: Helvetica, Arial, "Bitstream Vera Sans", sans-serif;
+  font-size: 10.799999999999999px;
+  line-height: 18px;
+}
+p,
+ul,
+ol {
+  letter-spacing: 0.004em;
+}
+ul,
+ol {
+  list-style-type: disc;
+  margin-left: 1em;
+}
+pre {
+  font-family: Menlo, "Andale Mono", Monaco, "Lucida Console", "DejaVu Sans Mono", monospace;
+  font-size: 11.999999879999999px;
+  line-height: 18px;
+  background-color: rgba(205,187,175,0.8);
+  -webkit-border-radius: 9px;
+  -moz-border-radius: 9px;
+  border-radius: 9px;
+  padding: 9px 9px;
+}
+h1 {
+  font-family: "CopseRegular", Arial, sans-serif;
+  font-size: 36px;
+  line-height: 36px;
+}
+h2 {
+  font-family: "CopseRegular", Arial, sans-serif;
+  font-size: 21.599999999999998px;
+  line-height: 36px;
+}
+li>ul {
+  margin-left: 4em;
+}
+#title {
+  font-family: "CopseRegular", Arial, sans-serif;
+  font-size: 54px;
+  line-height: 54px;
+  background: url("/assets/tache.png") 11px 2.5px no-repeat;
+  padding-left: 180px;
+}
+h1,
+h2,
+h3,
+h4 {
+  color: #af9381;
+}
+h1 a,
+h2 a,
+h3 a,
+h4 a {
+  text-decoration: none;
+}
+a {
+  color: #af9381;
+}
+hr {
+  background: url("/assets/hr.png") center center no-repeat;
+  height: 36px;
+}
+ins {
+  font-style: italic;
+  text-decoration: none;
+}
+ins:before {
+  content: "[";
+}
+ins:after {
+  content: "]";
+}

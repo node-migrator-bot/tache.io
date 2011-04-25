@@ -1,0 +1,5 @@
+auto: true
+safe: true
+pygments: true
+exclude: ["TODO.md"]
+markdown: rdiscount

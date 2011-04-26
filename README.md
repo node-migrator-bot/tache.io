@@ -115,3 +115,7 @@ Testing is performed with the excellent [Expresso](http://visionmedia.github.com
     * selective cache cleardown tools
 * Optionally log events to remote analytics services.
 * Possibly operate in a 'fuller' proxy mode (more transparent)
+
+## License
+
+Copyright (c) 2011 Owen Smith. Licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)

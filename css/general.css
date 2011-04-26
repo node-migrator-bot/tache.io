@@ -181,15 +181,24 @@ ol {
   list-style-type: disc;
   margin-left: 1em;
 }
-pre {
+pre,
+p>code {
   font-family: Menlo, "Andale Mono", Monaco, "Lucida Console", "DejaVu Sans Mono", monospace;
   font-size: 11.999999879999999px;
   line-height: 18px;
   background-color: rgba(205,187,175,0.8);
+}
+pre {
+  padding: 9px 9px;
   -webkit-border-radius: 9px;
   -moz-border-radius: 9px;
   border-radius: 9px;
-  padding: 9px 9px;
+}
+p>code {
+  padding: 3.6px 3.6px;
+  -webkit-border-radius: 3.6px;
+  -moz-border-radius: 3.6px;
+  border-radius: 3.6px;
 }
 h1 {
   font-family: "CopseRegular", Arial, sans-serif;

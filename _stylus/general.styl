@@ -123,12 +123,17 @@ ul, ol
   list-style-type disc
   margin-left 1em
 
-pre
+pre, p>code
   font code 0.66666666
   background-color rgba(desaturate(lighten(hg, 25%), 0%), 0.8)
-  //background-color hg
-  border-radius grid(0.5)
+
+pre
   padding grid(0.5) grid(0.5)
+  border-radius grid(0.5)
+
+p>code
+  padding grid(0.2) grid(0.2)
+  border-radius grid(0.2)
 
 h1
   font heading 2

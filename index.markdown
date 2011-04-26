@@ -41,4 +41,11 @@ You make an HTTP request to the endpoint's URL, followed by the full URL of the 
     $ curl http://mytacheserver/echo.fix/http://example.com/original_content.txt
     The internetz is made of catz
 
+Tache first fetches the remote content specified, then passes it and its headers to the function indicated in your URL.
 
+Your endpoint can then do whatever it likes to the content; when it's done, it emits a `done` event or calls `this.done` with the transformed content.
+
+
+## More info
+
+This site will contain full documentation for Tache.io soon. In the meantime, some more info can be found in the [project readme](https://github.com/orls/tache.io/blob/master/README.md) on github

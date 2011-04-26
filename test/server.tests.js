@@ -1,5 +1,5 @@
 var http   = require('http'),
-    tache  = require("tache.io"),
+    tache  = require("../"),
     //tache  = require("../coverage/"),
     assert = require('assert');
 

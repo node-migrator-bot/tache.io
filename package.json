@@ -1,6 +1,6 @@
 {
   "name": "tache.io",
-  "main": "./tache.js",
+  "main": "lib/tache.js",
   "version": "0.0.1",
   "author": "Owen Smith <owen@orls.co.uk>",
   "repository":

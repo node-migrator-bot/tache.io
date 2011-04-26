@@ -29,7 +29,7 @@ Tache.io will fetch the request specified by the URL, pass it through each trans
 
 ## How to write endpoints
 
-For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with NPM, endpoints are stores in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
+For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with NPM, endpoints are stored in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
 
 For example, if you want to provide an endpoint that is accessed at `http://myserver/munge/http://example.com` you can either add a single file called `munge.js` in `node_modules`, or add a directory called `munge` containing a package.json file, or anything else that can be read by `require()`.
 

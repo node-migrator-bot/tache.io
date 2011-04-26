@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 Trivial bootstrapper to kickstart tache from the command line.
 
@@ -5,7 +7,8 @@ Intended for local use during development, but also
 as an example of a minimal script to get tache running.
 */
 
-var tache = require("tache.io");
+
+var tache = require("./");
 
 tache.init(process.argv[2] || {
   "cache":{

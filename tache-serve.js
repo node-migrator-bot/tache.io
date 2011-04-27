@@ -15,7 +15,8 @@ var tache = require("./"),
     
 var util  = tache.util;
 
-var config = {};
+var config = {},
+    pwd = process.env.PWD.trim('/')+'/';
 
 /*
 USAGE:
@@ -29,9 +30,10 @@ use - for the first arg.
 
 */
 
+
 if (process.argv[3]) {
   try {
-    var config_path = util.resolve(process.env.PWD, process.argv[3], false, util.RESOLVE_FILES_ONLY);
+    var config_path = util.resolve(pwd, process.argv[3], false, util.RESOLVE_FILES_ONLY);
   } catch(e) {
     throw new Error("Unable to start Tache.io: Specified config file not found : " + e.message);
     return false;
@@ -46,7 +48,7 @@ if (process.argv[3]) {
 
 if (process.argv[2] && process.argv[2] != '-') {
   try {
-    var endpoint_path = util.resolve(process.env.PWD, process.argv[2], false, util.RESOLVE_DIRS_ONLY);
+    var endpoint_path = util.resolve(pwd, process.argv[2], false, util.RESOLVE_DIRS_ONLY);
     config.endpoints_dir = endpoint_path;
   } catch(e) {
     throw new Error("Unable to start Tache.io: Specified endpoint dir not found : " + e.message);

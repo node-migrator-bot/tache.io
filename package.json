@@ -1,7 +1,7 @@
 {
   "name": "tache.io",
   "main": "lib/tache.js",
-  "bin": {"tache-bootstrap": "./tache-bootstrap.js"},
+  "bin": {"tache-serve": "./tache-serve.js"},
   "version": "0.0.1",
   "author": "Owen Smith <owen@orls.co.uk>",
   "homepage": "http://orls.github.com/tache.io/",

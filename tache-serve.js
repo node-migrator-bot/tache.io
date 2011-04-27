@@ -8,14 +8,49 @@ as an example of a minimal script to get tache running.
 */
 
 
-var tache = require("./");
+var tache = require("./"),
+    sys   = require('sys'),
+    fs    = require('fs'),
+    path  = require('path'),
+    util  = require('./util');
 
-tache.init(process.argv[2] || {
-  "cache":{
-    "ttl":"1m",
-    "redis":{
-      "host":"127.0.0.1",
-      "port":"6379"
-    }
+var config = {};
+
+/*
+USAGE:
+first arg is the directory to use for tache endpoints. Tache will try to
+prefix require() calls with this.
+second arg is the path to a configuration file.
+
+To pass a config file path without a special directory (e..g if you're
+only using globally-installed npm modules for your endpoints) then
+use - for the first arg.
+
+*/
+
+if (process.argv[3]) {
+  try {
+    var config_path = util.resolve(process.env.PWD, process.argv[3], false, util.RESOLVE_FILES_ONLY);
+  } catch(e) {
+    throw new Error("Unable to start Tache.io: Specified config file not found : " + e.message);
+    return false;
   }
-});
+  
+  try {
+    config = JSON.parse(fs.readFileSync(config_path, "utf8"));
+  } catch(e) {
+    throw new Error("Error reading config file '" + config_path + "'" + e.message);
+  }
+}
+
+if (process.argv[2] && process.argv[2] != '-') {
+  try {
+    var endpoint_path = util.resolve(process.env.PWD, process.argv[2], false, util.RESOLVE_DIRS_ONLY);
+    config.endpoints_dir = endpoint_path;
+  } catch(e) {
+    throw new Error("Unable to start Tache.io: Specified endpoint dir not found : " + e.message);
+    return false;
+  }
+}
+
+tache.init(config);

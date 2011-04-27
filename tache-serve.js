@@ -11,8 +11,9 @@ as an example of a minimal script to get tache running.
 var tache = require("./"),
     sys   = require('sys'),
     fs    = require('fs'),
-    path  = require('path'),
-    util  = require('./util');
+    path  = require('path');
+    
+var util  = tache.util;
 
 var config = {};
 

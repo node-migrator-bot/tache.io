@@ -3,7 +3,11 @@ var http   = require('http'),
     //tache  = require("../coverage/"),
     assert = require('assert');
 
-var server = tache.init('tache-config.json', false);
+var server = tache.init({
+      "cache":{
+        "enabled":false
+      }
+    }, false);
 var offlineOnly = (process.argv[2] == "offline");
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key

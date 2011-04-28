@@ -27,6 +27,41 @@ You can also specify the endpoint as an additional header named `Tache-endpoint`
 
 Tache.io will fetch the request specified by the URL, pass it through each transformation job in turn, and output the result to the client. It'll also store a cache of the result on the server, ready for quick retrieval later.
 
+## Usage
+
+Make sure you have all the prerequisites:
+
+* [Node](http://nodejs.org/) (tested on 0.4.0 +)
+* [npm](http://npmjs.org/)
+* A [Redis](http://redis.io/) server to connect to (optional)
+
+
+### In your own project
+
+Install using npm:
+
+    npm install tache.io
+
+Somewhere in your project, do the following;
+
+    var tache = require('tache.io');
+    
+    tache.init();
+
+This will start a Tache server using the Connect middleware, running on localhost:8000.
+
+### Standalone
+
+__Important__: If you're using the (currently pre-release) npm 1.0, you'll need to `npm install -g tache.io` before you can do this.
+
+Tache.io ships with a simple shell script `tache-serve` that allows you start a local tache server just by pointing it at a directory of endpoints.
+
+    tache-serve [endpoint_directory | -] [config_file]
+
+---
+
+Both of these will, by default, start Tache.io with local configuration: it will listen for requests on localhost:8000 and look for a redis server on 127.0.0.1:6379.
+
 ## How to write endpoints
 
 For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with NPM, endpoints are stored in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
@@ -55,46 +90,36 @@ For example, given the following code in `node_modules/echo.js`:
 
 Then a request to `http://myserver/echo/http://www.example.com` will simply return http://www.example.com's body content. A request to `http://myserver/echo.fix/http://www.example.com` will return it with any instances of 'teh' corrected to 'the'.
 
-## Usage
-
-Make sure you have all the prerequisites:
-
-* [Node](http://nodejs.org/) (tested on 0.4.0 +)
-* [npm](http://npmjs.org/)
-* [Redis](http://redis.io/)
-
-Clone this repository to somewhere on your machine
-
-    cd ~/
-    git clone https://github.com/orls/tache.io.git
-    cd tache.io/
-
-Link the tache.io package (note: this will not be required soon, once tache is released as a proper npm package)
-
-    npm link tache.io/
-
-Run tache:
-
-    node tache-bootstrap.js
-
-This will start Tache.io with default configuration: it will listen for requests on localhost:8000 and look for a redis server on 127.0.0.1:6379.
-
 ## Current status
+
+Tache currently supports a very open/freeform endpoint function structure. It does process requests end to end, but much of the API is open to change.
 
 Feel free to fork this project and help me build it. Suggestions and comments are always welcome; just add a feature request issue at https://github.com/orls/tache.io/issues
 
 ## Building and testing
 
+To hack on Tache.io itself, clone this repository to somewhere on your machine.
+
+    cd ~/
+    git clone https://github.com/orls/tache.io.git
+    cd tache.io/
+
 Testing is performed with the excellent [Expresso](http://visionmedia.github.com/expresso/)
 
-    npm install expresso
     cd tache.io/
+    npm install expresso
     expresso
 
 ## Related projects
 
 * [Node.io](http://node.io/) has some similar goals -- simple-to-write content transformations -- but a very different architecture focused less on remote resources.
 * Tache was conceived around the same time as [tip.js -- Translucent Intercepting Proxy](http://blog.lagentz.com/nodejs/translucent-intercepting-proxy-built-with-nodejs-tip-js/) and shares some of the goals and concepts.
+
+## Shoulders of giants
+
+Tache relies on the [Connect](http://senchalabs.github.com/connect/) middleware for HTTP server boilerplate and to impose some structure. It will, in future, make more extensive use of Connect  and will play nicely as part of your own Connect middleware stack.
+
+Much thanks to the [node_redis](https://github.com/mranney/node_redis/) and [validator](https://github.com/chriso/node-validator) libs.
 
 ## Some thoughts and notes
 
@@ -115,6 +140,7 @@ Testing is performed with the excellent [Expresso](http://visionmedia.github.com
     * selective cache cleardown tools
 * Optionally log events to remote analytics services.
 * Possibly operate in a 'fuller' proxy mode (more transparent)
+
 
 ## License
 

@@ -3,7 +3,7 @@
 
 Tache.io is an on-demand web data munger. It is a NodeJS-powered, Redis-backed server for applying transformations on remote content, with cached results.
 
-Tache.io enables remote clients (e.g. mobile apps) to receive Web resource in an altered fashion, without having to repeatedly munge data at the client end or alter the original web resources. It shoulders the burden of transforming data into lightweight representations and provides mass-availability, while keeping the original publishing server happily untouched and allowing for simple client processing.
+Tache.io enables remote clients (e.g. mobile apps) to receive Web resource in an altered fashion, without having to repeatedly munge data at the client end or having to alter the original web resources. It shoulders the burden of transforming data into lightweight representations and provides mass-availability, while keeping the original publishing server happily untouched and allowing for simple client processing.
 
 ## Overview
 
@@ -48,11 +48,9 @@ Somewhere in your project, do the following;
     
     tache.init();
 
-This will start a Tache server using the Connect middleware, running on localhost:8000.
-
 ### Standalone
 
-__Important__: If you're using the (currently pre-release) npm 1.0, you'll need to `npm install -g tache.io` before you can do this.
+__Important__: If you're using the (currently pre-release) npm 1.0, you'll need to `npm install -g tache.io` (to install globally) before you can run standalone tache.
 
 Tache.io ships with a simple shell script `tache-serve` that allows you start a local tache server just by pointing it at a directory of endpoints.
 
@@ -64,13 +62,15 @@ Both of these will, by default, start Tache.io with local configuration: it will
 
 ## How to write endpoints
 
-For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with NPM, endpoints are stored in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
+For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with npm, endpoints are stored in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
 
 For example, if you want to provide an endpoint that is accessed at `http://myserver/munge/http://example.com` you can either add a single file called `munge.js` in `node_modules`, or add a directory called `munge` containing a package.json file, or anything else that can be read by `require()`.
 
 Endpoint functions receive two parameters; the headers from the remote resource in question, and the body of the remote resource.
 
-Endpoints are expected to export at least one function `do`. This is considered the default endpoint function, when you call the endpoint just by its name.
+Endpoints are expected to export at least one function `do`. This is considered the default endpoint function, when you call the endpoint just by it's name without specifying a function.
+
+If your endpoint only has one function, you can just directly export the function, and save yourself three chars.
 
 You can export multiple functions, which are then accessible by specifying the function name in the request, in the form `endpoint_name.func-name`.
 

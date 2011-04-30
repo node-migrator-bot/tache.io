@@ -1,18 +1,21 @@
 {
   "name": "tache.io",
   "main": "lib/tache.js",
-  "bin": {"tache-serve": "./tache-serve.js"},
-  "version": "0.0.1",
+  "bin": {
+    "tache-serve": "./tache-serve.js"
+  },
+  "version": "0.0.2",
   "author": "Owen Smith <owen@orls.co.uk>",
   "homepage": "http://orls.github.com/tache.io/",
   "description": "A caching server for easily writing transformations against remote resources: munge, reformat, scrape, cache and rebroadcast stuff.",
-  "licenses" :
-    [ { "type" : "MIT"
-      , "url" : "http://github.com/orls/tache.io/raw/master/LICENCE"
-    } ],
-  "repository":
-  {
-    "url": "https://orls@github.com/orls/tache.io.git"
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/orls/tache.io/raw/master/LICENCE"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/orls/tache.io.git"
   },
   "dependencies": {
     "validator": ">=0.1.7",

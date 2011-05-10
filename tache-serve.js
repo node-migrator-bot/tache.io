@@ -49,7 +49,7 @@ if (process.argv[3]) {
 if (process.argv[2] && process.argv[2] != '-') {
   try {
     var endpoint_path = util.resolve(pwd, process.argv[2], false, util.RESOLVE_DIRS_ONLY);
-    config.endpoints_dir = endpoint_path;
+    config.from_dir = endpoint_path;
   } catch(e) {
     throw new Error("Unable to start Tache.io: Specified endpoint dir not found : " + e.message);
     return false;

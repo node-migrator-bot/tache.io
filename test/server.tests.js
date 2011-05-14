@@ -4,10 +4,14 @@ var http   = require('http'),
     assert = require('assert');
 
 var server = tache.init({
-      "cache":{
+      cache:{
         "enabled":false
+      },
+      from:{
+        dir:tache.util.resolve(process.env.PWD.trim('/'), 'examples', false, tache.util.RESOLVE_DIR_ONLY)
       }
     }, false);
+
 var offlineOnly = (process.argv[2] == "offline");
 
 //TODO: would be nice to have these in a config somewhere, available globally and called by key
@@ -122,7 +126,7 @@ if(!offlineOnly){
   
   module.exports["Cookie-needing remote site seeded"] = function(){
     assert.response(server, {
-      url:"/seed.asda/http://groceries.asda.com/asda-estore/search/searchlayout.jsp?searchString=bread&domainName=&pageConfiguration=8100012&fromContainer=yes&headerVersion=",
+      url:"/seeded/http://groceries.asda.com/asda-estore/search/searchlayout.jsp?searchString=bread&domainName=&pageConfiguration=8100012&fromContainer=yes&headerVersion=",
       headers:{'x-tache-nocache':'true'} //clear out the cache -- multiple frequent test runs agains the same redis sever will have some other value stored
     },function(res){
       assert.includes(res.body, '<strong>bread</strong>');

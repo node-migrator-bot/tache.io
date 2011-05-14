@@ -1,7 +1,7 @@
 # Tache.io
 ## The Transformation Cache server.
 
-Tache.io is an on-demand web data munger. It is a NodeJS-powered, Redis-backed server for applying transformations on remote content, with cached results.
+Tache.io is an on-demand web data munger. It is a NodeJS-powered, Redis-backed server for applying transformations on remote content, with cached results. Think of it as a [Translucent Intercepting Proxy](http://blog.lagentz.com/nodejs/translucent-intercepting-proxy-built-with-nodejs-tip-js/).
 
 Tache.io enables remote clients (e.g. mobile apps) to receive Web resource in an altered fashion, without having to repeatedly munge data at the client end or having to alter the original web resources. It shoulders the burden of transforming data into lightweight representations and provides mass-availability, while keeping the original publishing server happily untouched and allowing for simple client processing.
 
@@ -25,7 +25,7 @@ You can also specify the endpoint as an additional header named `Tache-endpoint`
     GET /http://example.com
     Tache-endpoint: my-endpoint
 
-Tache.io will fetch the request specified by the URL, pass it through each transformation job in turn, and output the result to the client. It'll also store a cache of the result on the server, ready for quick retrieval later.
+Tache.io will fetch the request specified by the URL, following redirects (actually any 3xx HTTP response codes), pass it to your endpoint function, and output the result to the client. It'll also store a cache of the result on the server, ready for quick retrieval later.
 
 ## Usage
 
@@ -50,11 +50,11 @@ Somewhere in your project, do the following;
 
 ### Standalone
 
-__Important__: If you're using the (currently pre-release) npm 1.0, you'll need to `npm install -g tache.io` (to install globally) before you can run standalone tache.
-
 Tache.io ships with a simple shell script `tache-serve` that allows you start a local tache server just by pointing it at a directory of endpoints.
 
     tache-serve [endpoint_directory | -] [config_file]
+
+__Important__: If you're using npm 1.0+  you'll need to `npm install -g tache.io` (to install globally) before you can run standalone tache. If you're not using NPM 1.0+, you should be.
 
 ---
 
@@ -62,33 +62,66 @@ Both of these will, by default, start Tache.io with local configuration: it will
 
 ## How to write endpoints
 
-For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with npm, endpoints are stored in a project's `node_modules` directory. They should have the same filename, or module name as you want to use in the URL when calling them.
+For compatibility with the [Node require() stack](http://nodejs.org/docs/v0.4.5/api/modules.html#modules) and with npm, endpoints are stored anywhere that require() can see them.
 
-For example, if you want to provide an endpoint that is accessed at `http://myserver/munge/http://example.com` you can either add a single file called `munge.js` in `node_modules`, or add a directory called `munge` containing a package.json file, or anything else that can be read by `require()`.
+You can install endpoints with npm; for endpoints not published on search.npmjs.org, you can either...
+
+* keep them outside of your project, add npm metadata, then use npm to install them 'locally' into your project
+* just copy/link them into your project's `node_modules` directory.
+
+Endpoint files should have the same filename, or module name, as you want to use in the URL when invoking them.
+
+For example, if you want to provide an endpoint that is accessed at `http://myserver/munge/http://example.com`, then in `myproject/node_modules` you can either add a single file called `munge.js`, or add a directory called `munge` containing a package.json file, or anything else that can be read by `require()`.
+
+Endpoints should export an object with the property `run`. This is the endpoint's core function.
 
 Endpoint functions receive two parameters; the headers from the remote resource in question, and the body of the remote resource.
-
-Endpoints are expected to export at least one function `do`. This is considered the default endpoint function, when you call the endpoint just by it's name without specifying a function.
-
-If your endpoint only has one function, you can just directly export the function, and save yourself three chars.
-
-You can export multiple functions, which are then accessible by specifying the function name in the request, in the form `endpoint_name.func-name`.
 
 For example, given the following code in `node_modules/echo.js`:
 
     // echo the remote content unmodified
-    module.exports.do = function(headers, content) {
-        this.emit('done', content);
-    }
-    
-    //echo the remote content with some corrections
-    module.exports.fix = function(headers, content) {
-        this.emit('done',
-            content.replace(/\b([tT])eh\b/gi, '$1he')
-        );
-    }
+    module.exports = {
+      
+      run: function(headers, body){
+        this.emit('done', headers, body);
+      }
+    };
 
-Then a request to `http://myserver/echo/http://www.example.com` will simply return http://www.example.com's body content. A request to `http://myserver/echo.fix/http://www.example.com` will return it with any instances of 'teh' corrected to 'the'.
+Then a request to `http://myserver/echo/http://www.example.com` will simply return http://www.example.com's body content.
+
+### Nesting
+
+Endpoints can contain other endpoints as additional properties. nested endpoints are invoked with the 'parent' name, a period, and the nested name. For example, we can enhance the above endpoint as follows:
+
+    // echo the remote content unmodified
+    module.exports = {
+      
+      run: function(headers, body){
+        this.emit('done', headers, body);
+      }
+      
+      fix: function(headers, body){
+        this.emit('done', headers, body.replace(/\b([tT])eh\b/gi, '$1he'));
+      }
+      
+    };
+
+A request to `http://myserver/echo.fix/http://www.example.com` will now return it with any instances of 'teh' corrected to 'the'.
+
+## Tweaking endpoint behaviours
+
+Endpoints can optionally have an property named `meta`, which is a hash of values that affect how parts of the tache lifecycle behave.
+
+The valid values at present are:
+
+* `expects`: the encoding to use when reading remote requests, before they're fed to your `run` function (default:`utf8`).
+* `emits`: the encoding to be used when writing your data back to the HTTP response (default:`utf8`).
+* `seed`: If the remote resources that your endpoint is intended for require cookies to be set, you can specify a 'seed' URL to be requested in advance (default:`false`). 
+* `ttl`: This allows endpoints to specify cache time-to-live using the same time period format as the main cache configuration (default:`1h`). *NOTE: not currently used* 
+
+See the [node documentation](http://nodejs.org/docs/v0.4.7/api/all.html#buffers) for more information about encodings.
+
+Endpoints inherit the default values above. Nested endpoints inherit the values of their parents, unless they specify overrides.
 
 ## Current status
 
@@ -140,6 +173,7 @@ Much thanks to the [node_redis](https://github.com/mranney/node_redis/) and [val
     * selective cache cleardown tools
 * Optionally log events to remote analytics services.
 * Possibly operate in a 'fuller' proxy mode (more transparent)
+  * server-side endpoint choosing, so the tache server can be configured as an HTTP proxy and no URL choosing is needed on the client.
 
 
 ## License

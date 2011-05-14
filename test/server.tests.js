@@ -26,6 +26,10 @@ module.exports = {
     'a-b-c',
     'a_b_c',
     'a-b-c.d',
+    'a/b-c.d',
+    'a/b_c.d',
+    'a/b_c.d.e',
+    'a/b_c.d_e',
     'a.b'];
     
     endpoints.forEach(function(endpoint){
@@ -42,7 +46,6 @@ module.exports = {
   "Bad endpoint names rejected":function(beforeExit){
     var done = 0;
     var endpoints = ['a.b/c',
-    'a.b.c',
     'a..b'];
     
     endpoints.forEach(function(endpoint){
@@ -80,7 +83,7 @@ module.exports = {
     testServer.listen(3001);
     
     assert.response(server, {
-      url:"/echo.noop/http://127.0.0.1:3001/"
+      url:"/echo/http://127.0.0.1:3001/"
     },{
       body:randomBodyContent
     });
@@ -107,7 +110,7 @@ if(!offlineOnly){
       
       res.on('end', function(){
         assert.response(server, {
-          url:"/echo.noop/http://www.example.com/"
+          url:"/echo/http://www.example.com/"
         },{
           body:ianaBody
         });

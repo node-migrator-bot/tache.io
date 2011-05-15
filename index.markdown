@@ -19,16 +19,21 @@ This allows you to easily provide high-availability, perfectly tailored resource
 
 You define how you want resources modified in endpoint files, written in Javascript and obeying a simple structure.
 
-    // echo the remote content unmodified
-    module.exports.do = function(headers, content) {
-      this.emit('done', content);
-    }
-    
-    //echo the remote content with some corrections
-    module.exports.fix = function(headers, content) {
-      this.emit('done',
-        content.replace(/\b([tT])eh\b/gi, '$1he')
-      );
+    // echo.js : by default, echo the remote content unmodified
+    module.exports = {
+      
+      run:function(headers, content) {
+        this.emit('done', content);
+      },
+      
+      //or clean it up a bit:
+      fix:{
+        run:function(headers, content) {
+          this.emit('done',
+            content.replace(/\b([tT])eh\b/gi, '$1he')
+          );
+        }
+      }
     }
 
 You make an HTTP request to the endpoint's URL, followed by the full URL of the remote resource to modify
@@ -37,11 +42,15 @@ You make an HTTP request to the endpoint's URL, followed by the full URL of the 
     $ curl http://example.com/original_content.txt
     Teh internetz is made of catz
     
+    straightforward echo:
+    $ curl http://mytacheserver/echo/http://example.com/original_content.txt
+    Teh internetz is made of catz
+    
     modified:
     $ curl http://mytacheserver/echo.fix/http://example.com/original_content.txt
     The internetz is made of catz
 
-Tache first fetches the remote content specified, then passes it and its headers to the function indicated in your URL.
+Tache first fetches the remote content specified, then passes it and its headers to the function indicated by your URL.
 
 Your endpoint can then do whatever it likes to the content; when it's done, it emits a `done` event or calls `this.done` with the transformed content.
 

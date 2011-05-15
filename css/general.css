@@ -121,8 +121,8 @@ table {
 }
 @font-face {
   font-family: "CopseRegular";
-  src: url("/assets/copse/Copse-Regular-webfont.eot");
-  src: url("/assets/copse/Copse-Regular-webfont.eot?#iefix") format("eot"), url("/assets/copse/Copse-Regular-webfont.woff") format("woff"), url("/assets/copse/Copse-Regular-webfont.ttf") format("truetype"), url("/assets/copse/Copse-Regular-webfont.svg#webfont2ZLDIqTa") format("svg");
+  src: url("/tache.io/assets/copse/Copse-Regular-webfont.eot");
+  src: url("/tache.io/assets/copse/Copse-Regular-webfont.eot?#iefix") format("eot"), url("/tache.io/assets/copse/Copse-Regular-webfont.woff") format("woff"), url("/tache.io/assets/copse/Copse-Regular-webfont.ttf") format("truetype"), url("/tache.io/assets/copse/Copse-Regular-webfont.svg#webfont2ZLDIqTa") format("svg");
   font-weight: normal;
   font-style: normal;
 }
@@ -216,7 +216,7 @@ li>ul {
   font-size: 53px;
   line-height: 85px;
   line-height: 53px;
-  background: url("/assets/tache.png") 11px 2.5px no-repeat;
+  background: url("/tache.io/assets/tache.png") 11px 2.5px no-repeat;
   padding-left: 180px;
 }
 h1,
@@ -235,7 +235,7 @@ a {
   color: #af9381;
 }
 hr {
-  background: url("/assets/hr.png") center center no-repeat;
+  background: url("/tache.io/assets/hr.png") center center no-repeat;
   height: 36px;
 }
 ins {

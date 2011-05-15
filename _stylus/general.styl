@@ -4,6 +4,7 @@ p = '/tache.io/'
 fp = p+'assets/copse/'
 
 gridsize = 18
+modular_type_scales = (14 20)
 
 /*
 bg = #443340
@@ -31,6 +32,8 @@ title_offset = grid(ceil(logo_w / gridsize ) + 1)
 footer_h = grid(4)
 header_offset = grid(2)
 
+
+
 //-----------
 //typographic setups
 //-----------
@@ -47,12 +50,20 @@ font-heading  = 'CopseRegular', Arial, sans-serif
   font-style: normal;
 }
 
-font(type, size=false)
+typescale(factor = 0, scale = 0, ratio=1.618)
+  //to make expressing factors below 1 easier, they're expressed as
+  //negative increments, so to go down a step, use -1. this is actually 0.5 truthfully
+  op = '*'
+  if factor < 0
+    op = '/'
+  unit(ceil(operate(op, modular_type_scales[scale], (ratio ** abs(factor)))), 'px')
+
+
+font(type, size=false, scale=0)
   font-family lookup('font-' + type)
   if size is defined and size is not false
-    font-size grid(size)
-    line-height grid(ceil(size))
-
+    font-size typescale(size, scale)
+    line-height typescale(size+1, scale)
 
 //-----------
 //general utilities
@@ -77,7 +88,7 @@ html, body
   margin 0
 
 body
-  font standard .77777777
+  font standard 0
   background-color bg
   color fg
 
@@ -124,7 +135,7 @@ ul, ol
   margin-left 1em
 
 pre, p>code
-  font code 0.66666666
+  font code
   background-color rgba(desaturate(lighten(hg, 25%), 0%), 0.8)
 
 pre
@@ -136,16 +147,17 @@ p>code
   border-radius grid(0.2)
 
 h1
-  font heading 2
+  font heading 1 1
 
 h2
-  font heading 1.2
+  font heading 0 1
 
 li>ul
   margin-left: 4em
 
 #title
-  font heading 3
+  font heading 2 1
+  line-height typescale(2, 1)
   background url(p+'assets/tache.png') (title_offset/2)-(logo_w/2) (grid(3)/2)+grid(0.5)-(logo_h/2)  no-repeat
   padding-left unit(title_offset,'px')
 

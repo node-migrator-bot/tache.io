@@ -2,7 +2,8 @@ module.exports = {
   run: function(headers, data){
     var self = this;
     setTimeout(function(){
-      self.emit('done', headers, data);
+      self.headers = headers;
+      self.emit('done', data);
     }, 500);
   },
   meta:{

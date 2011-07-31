@@ -9,3 +9,5 @@ Icon?
 .Trashes
 
 *tmproj
+
+node_modules/

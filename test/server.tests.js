@@ -10,7 +10,7 @@ var server = tache.init({
       from:{
         dir:tache.util.resolve(process.env.PWD.trim('/'), 'examples', false, tache.util.RESOLVE_DIR_ONLY)
       }
-    }, false);
+    }, false).server;
 
 var offlineOnly = (process.argv[2] == "offline");
 

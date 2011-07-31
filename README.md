@@ -44,9 +44,18 @@ Install using npm:
 
 Somewhere in your project, do the following;
 
-    var tache = require('tache.io');
+    var tache = require('tache.io').init();
     
-    tache.init();
+    tache.tachify(
+      "my/endpoint/class.method",
+      "http://www.example.com"
+      function(err, response) {
+        console.log(
+          response.headers,
+          response.body
+          )
+      }
+    );
 
 ### Standalone
 

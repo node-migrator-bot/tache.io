@@ -4,7 +4,7 @@
   "bin": {
     "tache-serve": "./tache-serve.js"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Owen Smith <owen@orls.co.uk>",
   "homepage": "http://orls.github.com/tache.io/",
   "description": "A caching server for easily writing transformations against remote resources: munge, reformat, scrape, cache and rebroadcast stuff.",
